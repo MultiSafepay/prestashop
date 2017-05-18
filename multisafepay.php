@@ -781,7 +781,7 @@ class Multisafepay extends PaymentModule
                 $min_amount = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MIN_AMOUNT');
                 $max_amount = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MAX_AMOUNT');
 
-                if (($min_amount != NULL && $amount > $min_amount) && ($max_amount != NULL && $amount < $max_amount) && $active) {
+                if (($min_amount != NULL && $amount >= $min_amount) && ($max_amount != NULL && $amount <= $max_amount) && $active) {
                     $active = true;
                 } elseif ($min_amount == NULL && $max_amount == NULL && $active) {
                     $active = true;
@@ -886,12 +886,10 @@ class Multisafepay extends PaymentModule
                     $active = true;
                 }
 
-                echo $active;
-
                 $min_amount = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MIN_AMOUNT');
                 $max_amount = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MAX_AMOUNT');
 
-                if (($min_amount != NULL && $amount > $min_amount) && ($max_amount != NULL && $amount < $max_amount) && $active) {
+                if (($min_amount != NULL && $amount >= $min_amount) && ($max_amount != NULL && $amount <= $max_amount) && $active) {
                     $active = true;
                 } elseif ($min_amount == NULL && $max_amount == NULL && $active) {
                     $active = true;
