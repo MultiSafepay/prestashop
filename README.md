@@ -3,7 +3,7 @@ MultiSafepay Module for Prestashop 1.7
 
 The MultiSafepay module for Prestashop 1.7 allows you to integrate add all paymentmethods and giftcards offered by MultiSafepay into your Prestashop 1.7 webshop.
 
-The MultiSafepay module for Prestashop 1.7 2 has support for:
+The MultiSafepay module for Prestashop 1.7 has support for:
 
 Paymentmethods:
 1. iDEAL
@@ -54,3 +54,8 @@ The following giftcards are supported:
 
 
 For support you can contact MultiSafepay by e-mail using techsupport @ multisafepay.com
+
+
+#Installation
+The module needs to be uploaded to:
+prestashop_root/modules/multisafepay/
