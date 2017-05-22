@@ -216,7 +216,41 @@ class Multisafepay extends PaymentModule
                 Configuration::updateValue('MULTISAFEPAY_OS_' . Tools::strtoupper($status), (int) $order_state->id);
             }
         }
+        $this->initializeConfig();
         return true;
+    }
+
+    protected function initializeConfig()
+    {
+        $default_currency = $this->context->currency->id;
+        $default_country = $this->context->country->id;
+        $this->groups = Group::getGroups($this->context->language->id);
+        $this->carriers = Carrier::getCarriers($this->context->language->id, false, false, false, null, Carrier::ALL_CARRIERS);
+
+        foreach ($this->giftcards as $giftcard) {
+            Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CURRENCY_' . $default_currency, 'on');
+            Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_' . $default_country, 'on');
+
+            foreach ($this->groups as $group) {
+                Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_' . $group['id_group'], 'on');
+            }
+
+            foreach ($this->carriers as $carrier) {
+                Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_carrier'], 'on');
+            }            
+        }
+        foreach ($this->gateways as $gateway) {
+            Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CURRENCY_' . $default_currency, 'on');
+            Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_' . $default_country, 'on');
+
+            foreach ($this->groups as $group) {
+                Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $group['id_group'], 'on');
+            }
+
+            foreach ($this->carriers as $carrier) {
+                Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_carrier'], 'on');
+            }        
+        }
     }
 
     public function uninstall()
