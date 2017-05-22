@@ -1,3 +1,8 @@
+{if isset($giftcard_settings_saved)}
+<div class="alert alert-success">{$giftcard_settings_saved}
+<button type="button" class="close" data-dismiss="alert">&times;</button>
+</div>
+{/if}
 <form id="multisafepay_giftcards_form" class="defaultForm form-horizontal" action="" method="post">
   <div class="panel">
     {foreach from=$giftcards key=sort item=giftcard}

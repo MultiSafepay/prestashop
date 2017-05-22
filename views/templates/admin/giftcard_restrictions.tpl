@@ -1,3 +1,8 @@
+{if isset($giftcard_restrictions_saved)}
+<div class="alert alert-success">{$giftcard_restrictions_saved}
+<button type="button" class="close" data-dismiss="alert">&times;</button>
+</div>
+{/if}
 <form id="module_form" class="defaultForm form-horizontal" action="" method="post">
   <!--Start Giftcards-->
   <span class="restriction_title">{$giftcards_restriction}</span>

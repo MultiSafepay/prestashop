@@ -1,3 +1,8 @@
+{if isset($gateway_settings_saved)}
+<div class="alert alert-success">{$gateway_settings_saved}
+<button type="button" class="close" data-dismiss="alert">&times;</button>
+</div>
+{/if}
 <form id="multisafepay_gateways_form" class="defaultForm form-horizontal" action="" method="post">
   <div class="panel">
     {foreach from=$gateways key=sort item=payment}

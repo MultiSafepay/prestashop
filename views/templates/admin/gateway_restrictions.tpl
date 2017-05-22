@@ -1,3 +1,8 @@
+{if isset($gateway_restrictions_saved)}
+<div class="alert alert-success">{$gateway_restrictions_saved}
+<button type="button" class="close" data-dismiss="alert">&times;</button>
+</div>
+{/if}
 <form id="module_form" class="defaultForm form-horizontal" action="" method="post">
   <!--Start gateways-->
   <span class="restriction_title">{$gateways_restriction}</span>
