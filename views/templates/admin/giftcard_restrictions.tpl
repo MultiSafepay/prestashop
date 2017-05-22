@@ -1,4 +1,4 @@
-<form id="module_form" class="defaultForm form-horizontal" action="" method="post" enctype="multipart/form-data">
+<form id="module_form" class="defaultForm form-horizontal" action="" method="post">
   <!--Start Giftcards-->
   <span class="restriction_title">{$giftcards_restriction}</span>
   <div class="panel">

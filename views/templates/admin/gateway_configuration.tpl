@@ -1,4 +1,4 @@
-<form id="multisafepay_gateways_form" class="defaultForm form-horizontal" action="" method="post" enctype="multipart/form-data">
+<form id="multisafepay_gateways_form" class="defaultForm form-horizontal" action="" method="post">
   <div class="panel">
     {foreach from=$gateways key=sort item=payment}
       <div class="form-group">

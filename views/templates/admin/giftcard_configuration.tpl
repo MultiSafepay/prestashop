@@ -1,4 +1,4 @@
-<form id="multisafepay_giftcards_form" class="defaultForm form-horizontal" action="" method="post" enctype="multipart/form-data">
+<form id="multisafepay_giftcards_form" class="defaultForm form-horizontal" action="" method="post">
   <div class="panel">
     {foreach from=$giftcards key=sort item=giftcard}
       <div class="form-group">
