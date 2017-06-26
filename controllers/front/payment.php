@@ -198,7 +198,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                                 $mailVars = array(
                                     '{bankwire_owner}' => $result->gateway_info->destination_holder_name,
                                     '{bankwire_details}' => $result->gateway_info->destination_holder_iban,
-                                    '{bankwire_address}' => $this->l('Betaalkenmerk : ') . $result->gateway_info->reference
+                                    '{bankwire_address}' => $this->module->l('Betaalkenmerk : ', 'payment') . $result->gateway_info->reference
                                 );
 
                                 $this->module->validateOrder((int) $new_cart['cart']->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $multisafepay->orders->result->data->payment_details->type, null, $mailVars, (int) $currency->id, false, $customer->secure_key);
@@ -218,7 +218,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                     $mailVars = array(
                         '{bankwire_owner}' => $result->gateway_info->destination_holder_name,
                         '{bankwire_details}' => $result->gateway_info->destination_holder_iban,
-                        '{bankwire_address}' => $this->l('Betaalkenmerk : ') . $result->gateway_info->reference
+                        '{bankwire_address}' => $this->module->l('Betaalkenmerk : ', 'payment') . $result->gateway_info->reference
                     );
                     $this->module->validateOrder((int) $this->context->cart->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $multisafepay->orders->result->data->payment_details->type, null, $mailVars, (int) $currency->id, false, $customer->secure_key);
                     Tools::redirect($this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect", "transactionid" => $this->context->cart->id), true));
