@@ -859,7 +859,7 @@ class Multisafepay extends PaymentModule
                 }
 
                 $ip_addresses = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_IP');
-                if (in_array($_SERVER["REMOTE_ADDR"], explode(';', $ip_addresses))) {
+                if (in_array(Tools::getRemoteAddr(), explode(';', $ip_addresses))) {
                     $active = false;
                 }
 
