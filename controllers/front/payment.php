@@ -1,5 +1,33 @@
 <?php
 
+/**
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Open Software License (OSL 3.0)
+ * that is provided with Prestashop in the file LICENSES.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/osl-3.0.php
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade the MultiSafepay plugin
+ * to newer versions in the future. If you wish to customize the plugin for your
+ * needs please document your changes and make backups before your update.
+ *
+ * @category    MultiSafepay
+ * @package     Connect
+ * @author      Tech Support <techsupport@multisafepay.com>
+ * @copyright   Copyright (c) 2017 MultiSafepay, Inc. (http://www.multisafepay.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+ * PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 {
 
@@ -50,8 +78,15 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 
         list ($street_billing, $house_number_billing) = $this->parseCustomerAddress($billing->address1);
 
-        if (!$house_number_invoice) {
-            $house_number_invoice = $address_invoice->address2;
+        if (!$house_number_billing) {
+            $house_number_billing = $billing->address2;
+        }
+
+
+        list ($street_shipping, $house_number_shipping) = $this->parseCustomerAddress($shipping->address1);
+
+        if (!$house_number_shipping) {
+            $house_number_shipping = $shipping->address2;
         }
 
 
@@ -96,9 +131,9 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 "forwarded_ip" => $forwarded_ip,
                 "first_name" => $shipping->firstname,
                 "last_name" => $shipping->lastname,
-                "address1" => $shipping->address1,
+                "address1" => $street_shipping,
                 "address2" => $shipping->address2,
-                "house_number" => $shipping->address2,
+                "house_number" => $house_number_shipping,
                 "zip_code" => $shipping->postcode,
                 "city" => $shipping->city,
                 "country" => $shipping_country->iso_code,
@@ -113,7 +148,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             "plugin" => array(
                 "shop" => 'Prestashop',
                 "shop_version" => _PS_VERSION_,
-                "plugin_version" => ' - Plugin 1.0.0',
+                "plugin_version" => ' - Plugin 4.0.0',
                 "partner" => "MultiSafepay",
             ),
         );
@@ -170,7 +205,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                                 $mailVars = array(
                                     '{bankwire_owner}' => $result->gateway_info->destination_holder_name,
                                     '{bankwire_details}' => $result->gateway_info->destination_holder_iban,
-                                    '{bankwire_address}' => $this->l('Betaalkenmerk : ') . $result->gateway_info->reference
+                                    '{bankwire_address}' => $this->module->l('Betaalkenmerk : ', 'payment') . $result->gateway_info->reference
                                 );
 
                                 $this->module->validateOrder((int) $new_cart['cart']->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $multisafepay->orders->result->data->payment_details->type, null, $mailVars, (int) $currency->id, false, $customer->secure_key);
@@ -190,7 +225,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                     $mailVars = array(
                         '{bankwire_owner}' => $result->gateway_info->destination_holder_name,
                         '{bankwire_details}' => $result->gateway_info->destination_holder_iban,
-                        '{bankwire_address}' => $this->l('Betaalkenmerk : ') . $result->gateway_info->reference
+                        '{bankwire_address}' => $this->module->l('Betaalkenmerk : ', 'payment') . $result->gateway_info->reference
                     );
                     $this->module->validateOrder((int) $this->context->cart->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $multisafepay->orders->result->data->payment_details->type, null, $mailVars, (int) $currency->id, false, $customer->secure_key);
                     Tools::redirect($this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect", "transactionid" => $this->context->cart->id), true));

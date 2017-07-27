@@ -1,4 +1,32 @@
 <?php
+/**
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Open Software License (OSL 3.0)
+ * that is provided with Prestashop in the file LICENSES.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/osl-3.0.php
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade the MultiSafepay plugin
+ * to newer versions in the future. If you wish to customize the plugin for your
+ * needs please document your changes and make backups before your update.
+ *
+ * @category    MultiSafepay
+ * @package     Connect
+ * @author      Tech Support <techsupport@multisafepay.com>
+ * @copyright   Copyright (c) 2017 MultiSafepay, Inc. (http://www.multisafepay.com)
+ * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+ * PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 
 require(dirname(__FILE__) . '/models/Api/MspClient.php');
 
@@ -82,7 +110,7 @@ class Multisafepay extends PaymentModule
     {
         $this->name = 'multisafepay';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.0';
+        $this->version = '4.0.0';
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
         $this->author = 'MultiSafepay';
         $this->controllers = array('validation', 'payment');
@@ -188,7 +216,41 @@ class Multisafepay extends PaymentModule
                 Configuration::updateValue('MULTISAFEPAY_OS_' . Tools::strtoupper($status), (int) $order_state->id);
             }
         }
+        $this->initializeConfig();
         return true;
+    }
+
+    protected function initializeConfig()
+    {
+        $default_currency = $this->context->currency->id;
+        $default_country = $this->context->country->id;
+        $this->groups = Group::getGroups($this->context->language->id);
+        $this->carriers = Carrier::getCarriers($this->context->language->id, false, false, false, null, Carrier::ALL_CARRIERS);
+
+        foreach ($this->giftcards as $giftcard) {
+            Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CURRENCY_' . $default_currency, 'on');
+            Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_' . $default_country, 'on');
+
+            foreach ($this->groups as $group) {
+                Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_' . $group['id_group'], 'on');
+            }
+
+            foreach ($this->carriers as $carrier) {
+                Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_carrier'], 'on');
+            }            
+        }
+        foreach ($this->gateways as $gateway) {
+            Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CURRENCY_' . $default_currency, 'on');
+            Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_' . $default_country, 'on');
+
+            foreach ($this->groups as $group) {
+                Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $group['id_group'], 'on');
+            }
+
+            foreach ($this->carriers as $carrier) {
+                Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_carrier'], 'on');
+            }        
+        }
     }
 
     public function uninstall()
@@ -256,6 +318,7 @@ class Multisafepay extends PaymentModule
             Configuration::updateValue('MULTISAFEPAY_ENVIRONMENT', Tools::getValue('MULTISAFEPAY_ENVIRONMENT'));
             Configuration::updateValue('MULTISAFEPAY_DAYS_ACTIVE', Tools::getValue('MULTISAFEPAY_DAYS_ACTIVE'));
             Configuration::updateValue('MULTISAFEPAY_SECONDS_ACTIVE', Tools::getValue('MULTISAFEPAY_SECONDS_ACTIVE'));
+            $this->context->smarty->assign('configuration_settings_saved', $this->l('Settings updated'));
         } elseif (Tools::isSubmit('btnGatewaysSubmit')) {
             foreach ($this->gateways as $gateway) {
                 Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"], Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"]));
@@ -266,6 +329,7 @@ class Multisafepay extends PaymentModule
                 Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_DESC', Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_DESC'));
                 Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_IP', Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_IP'));
             }
+            $this->context->smarty->assign('gateway_settings_saved', $this->l('Gateway settings updated'));
         } elseif (Tools::isSubmit('btnGiftcardsSubmit')) {
 
             foreach ($this->giftcards as $giftcard) {
@@ -277,6 +341,7 @@ class Multisafepay extends PaymentModule
                 Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_DESC', Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_DESC'));
                 Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_IP', Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_IP'));
             }
+            $this->context->smarty->assign('giftcard_settings_saved', $this->l('Giftcard settings updated'));
         } elseif (Tools::isSubmit('btnSubmitGiftcardConfig')) {
             foreach ($this->giftcards as $giftcard) {
                 foreach ($this->currencies as $currency) {
@@ -295,6 +360,7 @@ class Multisafepay extends PaymentModule
                     Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_' . $country['id_country'], Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_' . $country['id_country']));
                 }
             }
+            $this->context->smarty->assign('giftcard_settings_saved', $this->l('Giftcard restrictions updated'));
         } elseif (Tools::isSubmit('btnSubmitGatewayConfig')) {
             foreach ($this->gateways as $gateway) {
                 foreach ($this->currencies as $currency) {
@@ -313,6 +379,7 @@ class Multisafepay extends PaymentModule
                     Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_' . $country['id_country'], Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_' . $country['id_country']));
                 }
             }
+            $this->context->smarty->assign('gateway_restrictions_saved', $this->l('Gateway restrictions updated'));
         }
     }
 
@@ -629,7 +696,9 @@ class Multisafepay extends PaymentModule
         $helper->tpl_vars = array(
             'fields_value' => $field_values,
         );
-        return $helper->generateForm($fields_form);
+        $settings_saved = $this->display(__FILE__, 'views/templates/admin/settings_saved.tpl');
+        $config_form = $helper->generateForm($fields_form);
+        return $settings_saved . $config_form;
     }
 
     /*
@@ -781,11 +850,16 @@ class Multisafepay extends PaymentModule
                 $min_amount = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MIN_AMOUNT');
                 $max_amount = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MAX_AMOUNT');
 
-                if (($min_amount != NULL && $amount > $min_amount) && ($max_amount != NULL && $amount < $max_amount) && $active) {
+                if (($min_amount != NULL && $amount >= $min_amount) && ($max_amount != NULL && $amount <= $max_amount) && $active) {
                     $active = true;
                 } elseif ($min_amount == NULL && $max_amount == NULL && $active) {
                     $active = true;
                 } else {
+                    $active = false;
+                }
+
+                $ip_addresses = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_IP');
+                if (in_array(Tools::getRemoteAddr(), explode(';', $ip_addresses))) {
                     $active = false;
                 }
 
@@ -886,12 +960,10 @@ class Multisafepay extends PaymentModule
                     $active = true;
                 }
 
-                echo $active;
-
                 $min_amount = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MIN_AMOUNT');
                 $max_amount = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MAX_AMOUNT');
 
-                if (($min_amount != NULL && $amount > $min_amount) && ($max_amount != NULL && $amount < $max_amount) && $active) {
+                if (($min_amount != NULL && $amount >= $min_amount) && ($max_amount != NULL && $amount <= $max_amount) && $active) {
                     $active = true;
                 } elseif ($min_amount == NULL && $max_amount == NULL && $active) {
                     $active = true;
