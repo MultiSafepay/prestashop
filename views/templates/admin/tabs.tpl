@@ -1,5 +1,5 @@
-<script type='text/javascript' src="{$multisafepay_js|escape:'htmlall':'UTF-8'}"></script>
-<link href="{$multisafepay_css|escape:'htmlall':'UTF-8'}" rel="stylesheet" type="text/css">
+<script type='text/javascript' src="{$multisafepay_module_dir|escape:'htmlall':'UTF-8'}views/js/multisafepay.js"></script>
+<link href="{$multisafepay_module_dir|escape:'htmlall':'UTF-8'}views/css/multisafepay.css" rel="stylesheet" type="text/css">
 
 {if isset($errors) && $errors}
     <div class="alert alert-danger">
