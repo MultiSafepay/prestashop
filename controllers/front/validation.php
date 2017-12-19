@@ -31,6 +31,7 @@
 class MultisafepayValidationModuleFrontController extends ModuleFrontController
 {
 
+    private $timeToWait = 5;
     protected $lock_file;
     protected $transaction;
     protected $create_order = false;
@@ -43,7 +44,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
         $type = Tools::getValue('type');
         $this->lock_file = 'multisafepay_cart_' . $cart_id . '.lock';
         $tries = 1;
-        while ($tries < 10) {
+        while ($tries < $this->timeToWait) {
             if (file_exists(_PS_ROOT_DIR_ . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'multisafepay' . DIRECTORY_SEPARATOR . 'locks' . DIRECTORY_SEPARATOR . $this->lock_file)) {
                 sleep(1);
                 $tries++;
@@ -53,7 +54,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
             }
         }
 
-        if ($tries == 10) {
+        if ($tries == $this->timeToWait) {
             $this->unlock();
             if ($type == "notification") {
                 die('ng');
@@ -78,7 +79,13 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
 
         if ($type == "redirect") {
 
-            $order = new Order(Order::getOrderByCartId((int) $cart_id));
+            /* wait maximal xx seconds to give PrestaShop the time to create the order */
+            $i = 0;
+            do {
+                sleep (1);
+                $order = new Order(Order::getOrderByCartId((int) $cart_id));
+            } while ( empty ($order->id) && ++$i < $this->timeToWait);
+
             if (isset($order->id_cart) && $order->id_cart > 0) {
                 $url = "index.php?controller=order-confirmation"
                         . '&key=' . $order->secure_key
