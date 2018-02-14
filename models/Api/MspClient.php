@@ -52,13 +52,12 @@ class MspClient
         //$this->gateways = new Gateways($this);
     }
 
-    public function initialize($environment, $test_api, $live_api)
+    public function initialize($environment, $api)
     {
+        $this->setApiKey($api);
         if (!$environment) {
-            $this->setApiKey($test_api);
             $this->setApiUrl('https://testapi.multisafepay.com/v1/json/');
         } else {
-            $this->setApiKey($live_api);
             $this->setApiUrl('https://api.multisafepay.com/v1/json/');
         }
     }

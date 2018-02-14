@@ -50,7 +50,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 
         $multisafepay = new MspClient();
         $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
-        $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY_TEST'), Configuration::get('MULTISAFEPAY_API_KEY_LIVE'));
+        $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
 
         $shipping = new Address($this->context->cart->id_address_delivery);
         $shipping_country = new Country($shipping->id_country);

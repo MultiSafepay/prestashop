@@ -65,7 +65,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
 
         $multisafepay = new MspClient();
         $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
-        $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY_TEST'), Configuration::get('MULTISAFEPAY_API_KEY_LIVE'));
+        $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
 
         $this->transaction = $multisafepay->orders->get($endpoint = 'orders', $cart_id, $body = array(), $query_string = false);
 
