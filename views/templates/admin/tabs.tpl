@@ -1,6 +1,28 @@
 <script type='text/javascript' src="{$multisafepay_js|escape:'htmlall':'UTF-8'}"></script>
 <link href="{$multisafepay_css|escape:'htmlall':'UTF-8'}" rel="stylesheet" type="text/css">
 
+{if isset($errors) && $errors}
+    <div class="alert alert-danger">
+        <p>{if $errors|@count > 1}{l s='There are %d errors' sprintf=$errors|@count mod='multisafepay'}{else}{l s='There is %d error' sprintf=$errors|@count mod='multisafepay'}{/if}</p>
+        <ol>
+            {foreach from=$errors key=k item=error}
+                <li>{$error}</li>
+            {/foreach}
+        </ol>
+    </div>
+{/if}
+
+{if isset($warnings) && $warnings}
+    <div class="alert alert-warning">
+        <p>{if $warnings|@count > 1}{l s='There are %d warnings' sprintf=$warnings|@count mod='multisafepay'}{else}{l s='There is %d error' sprintf=$warnings|@count mod='multisafepay'}{/if}</p>
+        <ol>
+            {foreach from=$warnings key=k item=warning}
+                <li>{$warning}</li>
+            {/foreach}
+        </ol>
+    </div>
+{/if}
+
 <div class="tabs">
   {if $tabs}
     <nav>
