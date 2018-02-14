@@ -237,7 +237,7 @@ class Multisafepay extends PaymentModule
 
             foreach ($this->carriers as $carrier) {
                 Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_carrier'], 'on');
-            }            
+            }
         }
         foreach ($this->gateways as $gateway) {
             Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CURRENCY_' . $default_currency, 'on');
@@ -249,7 +249,7 @@ class Multisafepay extends PaymentModule
 
             foreach ($this->carriers as $carrier) {
                 Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_carrier'], 'on');
-            }        
+            }
         }
     }
 
@@ -327,7 +327,6 @@ class Multisafepay extends PaymentModule
                 Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MIN_AMOUNT', Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MIN_AMOUNT'));
                 Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MAX_AMOUNT', Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MAX_AMOUNT'));
                 Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_DESC', Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_DESC'));
-                Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_IP', Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_IP'));
             }
             $this->context->smarty->assign('gateway_settings_saved', $this->l('Gateway settings updated'));
         } elseif (Tools::isSubmit('btnGiftcardsSubmit')) {
@@ -339,7 +338,6 @@ class Multisafepay extends PaymentModule
                 Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MIN_AMOUNT', Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MIN_AMOUNT'));
                 Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MAX_AMOUNT', Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MAX_AMOUNT'));
                 Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_DESC', Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_DESC'));
-                Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_IP', Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_IP'));
             }
             $this->context->smarty->assign('giftcard_settings_saved', $this->l('Giftcard settings updated'));
         } elseif (Tools::isSubmit('btnSubmitGiftcardConfig')) {
@@ -714,7 +712,6 @@ class Multisafepay extends PaymentModule
             $this->gateways[$key]['min_amount'] = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MIN_AMOUNT');
             $this->gateways[$key]['max_amount'] = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MAX_AMOUNT');
             $this->gateways[$key]['desc'] = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_DESC');
-            $this->gateways[$key]['ip'] = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_IP');
         }
 
         $lang_iso = $this->context->language->iso_code;
@@ -746,7 +743,6 @@ class Multisafepay extends PaymentModule
             'min_order_amount' => $this->l('Minimum order amount'),
             'max_order_amount' => $this->l('Maximum order amount'),
             'description' => $this->l('Frontend description'),
-            'ip_restriction' => $this->l('IP restriction'),
             'configuration' => $this->l('configuration'),
             'locale' => $locale,
             'path' => $this->_path,
@@ -855,11 +851,6 @@ class Multisafepay extends PaymentModule
                 } elseif ($min_amount == NULL && $max_amount == NULL && $active) {
                     $active = true;
                 } else {
-                    $active = false;
-                }
-
-                $ip_addresses = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_IP');
-                if (in_array(Tools::getRemoteAddr(), explode(';', $ip_addresses))) {
                     $active = false;
                 }
 
