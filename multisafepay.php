@@ -237,7 +237,7 @@ class Multisafepay extends PaymentModule
 
             foreach ($this->carriers as $carrier) {
                 Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_carrier'], 'on');
-            }            
+            }
         }
         foreach ($this->gateways as $gateway) {
             Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CURRENCY_' . $default_currency, 'on');
@@ -249,7 +249,7 @@ class Multisafepay extends PaymentModule
 
             foreach ($this->carriers as $carrier) {
                 Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_carrier'], 'on');
-            }        
+            }
         }
     }
 
@@ -846,15 +846,10 @@ class Multisafepay extends PaymentModule
                 }
 
 
+                $min_amount = floatval (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MIN_AMOUNT'));
+                $max_amount = floatval (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MAX_AMOUNT'));
 
-                $min_amount = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MIN_AMOUNT');
-                $max_amount = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MAX_AMOUNT');
-
-                if (($min_amount != NULL && $amount >= $min_amount) && ($max_amount != NULL && $amount <= $max_amount) && $active) {
-                    $active = true;
-                } elseif ($min_amount == NULL && $max_amount == NULL && $active) {
-                    $active = true;
-                } else {
+                if ( (!empty($min_amount) && $amount < $min_amount) || (!empty($max_amount) && $amount > $max_amount)) {
                     $active = false;
                 }
 
