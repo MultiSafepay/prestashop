@@ -317,7 +317,10 @@ class Multisafepay extends PaymentModule
             Configuration::updateValue('MULTISAFEPAY_DAYS_ACTIVE', Tools::getValue('MULTISAFEPAY_DAYS_ACTIVE'));
             Configuration::updateValue('MULTISAFEPAY_SECONDS_ACTIVE', Tools::getValue('MULTISAFEPAY_SECONDS_ACTIVE'));
             $this->context->smarty->assign('configuration_settings_saved', $this->l('Settings updated'));
-        } elseif (Tools::isSubmit('btnGatewaysSubmit')) {
+            return;
+        }
+
+        if (Tools::isSubmit('btnGatewaysSubmit')) {
             foreach ($this->gateways as $gateway) {
                 Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"], Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"]));
                 Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_TITLE', Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_TITLE'));
@@ -327,8 +330,10 @@ class Multisafepay extends PaymentModule
                 Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_DESC', Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_DESC'));
             }
             $this->context->smarty->assign('gateway_settings_saved', $this->l('Gateway settings updated'));
-        } elseif (Tools::isSubmit('btnGiftcardsSubmit')) {
+            return;
+        }
 
+        if (Tools::isSubmit('btnGiftcardsSubmit')) {
             foreach ($this->giftcards as $giftcard) {
                 Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"], Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"]));
                 Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_TITLE', Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_TITLE'));
@@ -336,44 +341,45 @@ class Multisafepay extends PaymentModule
                 Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_DESC', Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_DESC'));
             }
             $this->context->smarty->assign('giftcard_settings_saved', $this->l('Giftcard settings updated'));
-        } elseif (Tools::isSubmit('btnSubmitGiftcardConfig')) {
+            return;
+        }
+
+        if (Tools::isSubmit('btnSubmitGiftcardConfig')) {
             foreach ($this->giftcards as $giftcard) {
                 foreach ($this->currencies as $currency) {
                     Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CURRENCY_' . $currency['id_currency'], Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CURRENCY_' . $currency['id_currency']));
                 }
-
                 foreach ($this->groups as $group) {
                     Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_' . $group['id_group'], Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_' . $group['id_group']));
                 }
-
                 foreach ($this->carriers as $carrier) {
                     Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_carrier'], Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_carrier']));
                 }
-
                 foreach ($this->countries as $country) {
                     Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_' . $country['id_country'], Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_' . $country['id_country']));
                 }
             }
             $this->context->smarty->assign('giftcard_settings_saved', $this->l('Giftcard restrictions updated'));
-        } elseif (Tools::isSubmit('btnSubmitGatewayConfig')) {
+            return;
+        }
+
+        if (Tools::isSubmit('btnSubmitGatewayConfig')) {
             foreach ($this->gateways as $gateway) {
                 foreach ($this->currencies as $currency) {
                     Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CURRENCY_' . $currency['id_currency'], Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CURRENCY_' . $currency['id_currency']));
                 }
-
                 foreach ($this->groups as $group) {
                     Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $group['id_group'], Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $group['id_group']));
                 }
-
                 foreach ($this->carriers as $carrier) {
                     Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_carrier'], Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_carrier']));
                 }
-
                 foreach ($this->countries as $country) {
                     Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_' . $country['id_country'], Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_' . $country['id_country']));
                 }
             }
             $this->context->smarty->assign('gateway_restrictions_saved', $this->l('Gateway restrictions updated'));
+            return;
         }
     }
 
