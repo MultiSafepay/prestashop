@@ -83,20 +83,6 @@
               <div style="clear: both"></div>
             </div>
 
-            {if $payment.code == 'payafter' OR $payment.code == 'klarna' OR $payment.code == 'einvoice'}
-
-              <!-- IP restriction-->
-              <div  class="spacer">
-                <div class="col-lg-9">
-                  <label for="MULTISAFEPAY_GATEWAY_{$payment.code|escape:'htmlall':'UTF-8'}_IP">{$ip_restriction}</label>
-                </div>
-                <div class="col-lg-3">
-                  <textarea class="form-control" rows="3" name="MULTISAFEPAY_GATEWAY_{$payment.code|escape:'htmlall':'UTF-8'}_IP" id="MULTISAFEPAY_GATEWAY_{$payment.code|escape:'htmlall':'UTF-8'}_IP">{$payment.ip}</textarea>
-                </div>
-                <div style="clear: both"></div>
-              </div>
-            {/if}
-
           </div>
         </div>
       </div>
