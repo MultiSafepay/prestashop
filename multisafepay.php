@@ -261,8 +261,7 @@ class Multisafepay extends PaymentModule
         $this->unregisterHook('paymentReturn');
         $this->unregisterHook('actionOrderStatusPostUpdate');
 
-        Configuration::deleteByName('MULTISAFEPAY_API_KEY_LIVE');
-        Configuration::deleteByName('MULTISAFEPAY_API_KEY_TEST');
+        Configuration::deleteByName('MULTISAFEPAY_API_KEY');
         Configuration::deleteByName('MULTISAFEPAY_DEBUG');
         Configuration::deleteByName('MULTISAFEPAY_ENVIRONMENT');
         Configuration::deleteByName('MULTISAFEPAY_DAYS_ACTIVE');
@@ -280,7 +279,7 @@ class Multisafepay extends PaymentModule
 
                 $multisafepay = new MspClient();
                 $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
-                $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY_TEST'), Configuration::get('MULTISAFEPAY_API_KEY_LIVE'));
+                $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
 
                 $endpoint = 'orders/' . $params['cart']->id;
                 $ship_data = array(
@@ -312,8 +311,7 @@ class Multisafepay extends PaymentModule
     private function _postProcess()
     {
         if (Tools::isSubmit('btnSubmit')) {
-            Configuration::updateValue('MULTISAFEPAY_API_KEY_LIVE', Tools::getValue('MULTISAFEPAY_API_KEY_LIVE'));
-            Configuration::updateValue('MULTISAFEPAY_API_KEY_TEST', Tools::getValue('MULTISAFEPAY_API_KEY_TEST'));
+            Configuration::updateValue('MULTISAFEPAY_API_KEY', Tools::getValue('MULTISAFEPAY_API_KEY'));
             Configuration::updateValue('MULTISAFEPAY_DEBUG', Tools::getValue('MULTISAFEPAY_DEBUG'));
             Configuration::updateValue('MULTISAFEPAY_ENVIRONMENT', Tools::getValue('MULTISAFEPAY_ENVIRONMENT'));
             Configuration::updateValue('MULTISAFEPAY_DAYS_ACTIVE', Tools::getValue('MULTISAFEPAY_DAYS_ACTIVE'));
@@ -588,8 +586,7 @@ class Multisafepay extends PaymentModule
     protected function getMainConfiguration()
     {
         $field_values = array(
-            'MULTISAFEPAY_API_KEY_LIVE' => Tools::getValue('MULTISAFEPAY_API_KEY_LIVE', Configuration::get('MULTISAFEPAY_API_KEY_LIVE')),
-            'MULTISAFEPAY_API_KEY_TEST' => Tools::getValue('MULTISAFEPAY_API_KEY_TEST', Configuration::get('MULTISAFEPAY_API_KEY_TEST')),
+            'MULTISAFEPAY_API_KEY' => Tools::getValue('MULTISAFEPAY_API_KEY', Configuration::get('MULTISAFEPAY_API_KEY')),
             'MULTISAFEPAY_DEBUG' => Tools::getValue('MULTISAFEPAY_DEBUG', Configuration::get('MULTISAFEPAY_DEBUG')),
             'MULTISAFEPAY_ENVIRONMENT' => Tools::getValue('MULTISAFEPAY_ENVIRONMENT', Configuration::get('MULTISAFEPAY_ENVIRONMENT')),
             'MULTISAFEPAY_DAYS_ACTIVE' => Tools::getValue('MULTISAFEPAY_DAYS_ACTIVE', Configuration::get('MULTISAFEPAY_DAYS_ACTIVE')),
@@ -625,18 +622,12 @@ class Multisafepay extends PaymentModule
                         )
                     ), array(
                         'type' => 'text',
-                        'label' => $this->l('MultiSafepay Live API key'),
+                        'label' => $this->l('MultiSafepay API key'),
                         'hint' => $this->trans('The MultiSafepay API key can be found within your Multisafepay website configuration using MultiSafepay Control', array(), 'Modules.Multisafepay.Admin'),
-                        'name' => 'MULTISAFEPAY_API_KEY_LIVE',
+                        'name' => 'MULTISAFEPAY_API_KEY',
                         'required' => true
                     ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('MultiSafepay Test API key'),
-                        'hint' => $this->trans('The MultiSafepay API key can be found within your Multisafepay website configuration using MultiSafepay Control', array(), 'Modules.Multisafepay.Admin'),
-                        'name' => 'MULTISAFEPAY_API_KEY_TEST',
-                        'required' => true
-                    ),
+
                     array(
                         'type' => 'text',
                         'label' => $this->l('Days active'),
@@ -967,7 +958,7 @@ class Multisafepay extends PaymentModule
     {
         $multisafepay = new MspClient();
         $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
-        $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY_TEST'), Configuration::get('MULTISAFEPAY_API_KEY_LIVE'));
+        $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
 
         if (empty($multisafepay->getApiKey())) {
             return '';
