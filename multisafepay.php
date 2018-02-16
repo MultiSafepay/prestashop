@@ -335,8 +335,6 @@ class Multisafepay extends PaymentModule
                 Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"], Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"]));
                 Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_TITLE', Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_TITLE'));
                 Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_SORT', Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_SORT'));
-                Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MIN_AMOUNT', Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MIN_AMOUNT'));
-                Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MAX_AMOUNT', Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MAX_AMOUNT'));
                 Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_DESC', Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_DESC'));
             }
             $this->context->smarty->assign('giftcard_settings_saved', $this->l('Giftcard settings updated'));
@@ -762,8 +760,6 @@ class Multisafepay extends PaymentModule
             $this->giftcards[$key]['active'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"]);
             $this->giftcards[$key]['title'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_TITLE');
             $this->giftcards[$key]['sort'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_SORT');
-            $this->giftcards[$key]['min_amount'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MIN_AMOUNT');
-            $this->giftcards[$key]['max_amount'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MAX_AMOUNT');
             $this->giftcards[$key]['desc'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_DESC');
         }
 
@@ -944,17 +940,6 @@ class Multisafepay extends PaymentModule
 
                 if (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CURRENCY_' . $id_currency) == 'on' && Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_' . $id_shop_group) == "on" && Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $id_carrier) == 'on' && Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_' . $id_country) == 'on') {
                     $active = true;
-                }
-
-                $min_amount = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MIN_AMOUNT');
-                $max_amount = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_MAX_AMOUNT');
-
-                if (($min_amount != NULL && $amount >= $min_amount) && ($max_amount != NULL && $amount <= $max_amount) && $active) {
-                    $active = true;
-                } elseif ($min_amount == NULL && $max_amount == NULL && $active) {
-                    $active = true;
-                } else {
-                    $active = false;
                 }
 
                 /*

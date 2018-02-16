@@ -48,27 +48,6 @@
               <div style="clear: both"></div>
             </div>
 
-            <!-- Min amount-->
-            <div  class="spacer">
-              <div class="col-lg-9">
-                <label for="MULTISAFEPAY_GIFTCARD_{$giftcard.code|escape:'htmlall':'UTF-8'}_MIN_AMOUNT">{$min_order_amount}</label>
-              </div>
-              <div class="col-lg-3">
-                <input type="text" name="MULTISAFEPAY_GIFTCARD_{$giftcard.code|escape:'htmlall':'UTF-8'}_MIN_AMOUNT" id="MULTISAFEPAY_GIFTCARD_{$giftcard.code|escape:'htmlall':'UTF-8'}_MIN_AMOUNT" value="{$giftcard.min_amount}" >
-              </div>
-              <div style="clear: both"></div>
-            </div>
-
-            <!-- Max amount-->
-            <div  class="spacer">
-              <div class="col-lg-9">
-                <label for="MULTISAFEPAY_GIFTCARD_{$giftcard.code|escape:'htmlall':'UTF-8'}_MAX_AMOUNT">{$max_order_amount}</label>
-              </div>
-              <div class="col-lg-3">
-                <input type="text" name="MULTISAFEPAY_GIFTCARD_{$giftcard.code|escape:'htmlall':'UTF-8'}_MAX_AMOUNT" id="MULTISAFEPAY_GIFTCARD_{$giftcard.code|escape:'htmlall':'UTF-8'}_MAX_AMOUNT" value="{$giftcard.max_amount}" >
-              </div>
-              <div style="clear: both"></div>
-            </div>
             <!-- Description -->
             <div  class="spacer">
               <div class="col-lg-9">
