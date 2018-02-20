@@ -76,18 +76,8 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         }
         $this->getCart();
 
-        list ($street_billing, $house_number_billing) = $this->parseCustomerAddress($billing->address1);
-
-        if (!$house_number_billing) {
-            $house_number_billing = $billing->address2;
-        }
-
-
-        list ($street_shipping, $house_number_shipping) = $this->parseCustomerAddress($shipping->address1);
-
-        if (!$house_number_shipping) {
-            $house_number_shipping = $shipping->address2;
-        }
+        list ($street_billing,  $house_number_billing)  = $this->parseAddress($billing->address1,  $billing->address2);
+        list ($street_shipping, $house_number_shipping) = $this->parseAddress($shipping->address1, $shipping->address2);
 
 
         $transaction_data = array(
@@ -341,23 +331,18 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         $this->items = $items;
     }
 
-    private function parseAddress($street_address)
+    private function parseAddress($address1, $address2 = '')
     {
-        $matches = explode(" ", $street_address);
-        if (count($matches) == 1) {
-            $apartment = '0';
-            $street = $street_address;
-        } else {
-            $apartment = array_pop($matches);
-            $street = implode(" ", $matches);
-        }
+        $adress = trim ($address1 . ' ' . $address2);
+
+        $aMatch = array();
+        $pattern        = '#^([\w[:punct:] ]+) ([0-9]{1,5})\s*(.*)$#';
+        $matchResult    = preg_match($pattern, $adress, $aMatch);
+
+        $street         = (isset($aMatch[1])) ? $aMatch[1] : '';
+        $apartment      = (isset($aMatch[2])) ? $aMatch[2] : '' ;
+        $apartment     .= (isset($aMatch[3])) ? $aMatch[3] : '';
+
         return array($street, $apartment);
     }
-
-    public function parseCustomerAddress($street_address)
-    {
-        list($address, $apartment) = $this->parseAddress($street_address);
-        return array($address, $apartment);
-    }
-
 }
