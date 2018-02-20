@@ -102,8 +102,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             "manual" => "false",
             "items" => $this->items,
             "gateway" => Tools::getValue('gateway'),
-            "days_active" => Configuration::get('MULTISAFEPAY_DAYS_ACTIVE'),
-            "seconds_active" => Configuration::get('MULTISAFEPAY_SECONDS_ACTIVE'),
+            "seconds_active" => $this->getSecondsActive(),
             "payment_options" => array(
                 "notification_url" => $this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "notification"), true),
                 "redirect_url" => $this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect"), true),
@@ -243,6 +242,35 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
     /*
      * getCart() generated the checkout data structure and items list
      */
+
+
+    private function getSecondsActive()
+    {
+        $seconds_active = null;
+        $seconds  = Configuration::get('MULTISAFEPAY_TIME_ACTIVE');
+        $timeUnit = Configuration::get('MULTISAFEPAY_TIME_UNIT');
+
+        if ( empty ($seconds)) {
+            return $seconds_active;
+        }
+
+        switch ($timeUnit){
+            case 'days':
+                $seconds_active = $seconds*24*60*60;
+                break;
+              case 'hours':
+                $seconds_active = $seconds*60*60;
+                break;
+            case 'seconds':
+                $seconds_active = $seconds;
+                break;
+            default:
+                $seconds_active = null;
+        }
+
+        return $seconds_active;
+    }
+
 
     private function getCart()
     {
