@@ -264,8 +264,8 @@ class Multisafepay extends PaymentModule
         Configuration::deleteByName('MULTISAFEPAY_API_KEY');
         Configuration::deleteByName('MULTISAFEPAY_DEBUG');
         Configuration::deleteByName('MULTISAFEPAY_ENVIRONMENT');
-        Configuration::deleteByName('MULTISAFEPAY_DAYS_ACTIVE');
-        Configuration::deleteByName('MULTISAFEPAY_SECONDS_ACTIVE');
+        Configuration::deleteByName('MULTISAFEPAY_TIME_ACTIVE');
+        Configuration::deleteByName('MULTISAFEPAY_TIME_UNIT');
 
         return parent::uninstall();
     }
@@ -314,8 +314,8 @@ class Multisafepay extends PaymentModule
             Configuration::updateValue('MULTISAFEPAY_API_KEY', Tools::getValue('MULTISAFEPAY_API_KEY'));
             Configuration::updateValue('MULTISAFEPAY_DEBUG', Tools::getValue('MULTISAFEPAY_DEBUG'));
             Configuration::updateValue('MULTISAFEPAY_ENVIRONMENT', Tools::getValue('MULTISAFEPAY_ENVIRONMENT'));
-            Configuration::updateValue('MULTISAFEPAY_DAYS_ACTIVE', Tools::getValue('MULTISAFEPAY_DAYS_ACTIVE'));
-            Configuration::updateValue('MULTISAFEPAY_SECONDS_ACTIVE', Tools::getValue('MULTISAFEPAY_SECONDS_ACTIVE'));
+            Configuration::updateValue('MULTISAFEPAY_TIME_ACTIVE', Tools::getValue('MULTISAFEPAY_TIME_ACTIVE'));
+            Configuration::updateValue('MULTISAFEPAY_TIME_UNIT', Tools::getValue('MULTISAFEPAY_TIME_UNIT'));
             $this->context->smarty->assign('configuration_settings_saved', $this->l('Settings updated'));
             return;
         }
@@ -595,8 +595,8 @@ class Multisafepay extends PaymentModule
             'MULTISAFEPAY_API_KEY' => Tools::getValue('MULTISAFEPAY_API_KEY', Configuration::get('MULTISAFEPAY_API_KEY')),
             'MULTISAFEPAY_DEBUG' => Tools::getValue('MULTISAFEPAY_DEBUG', Configuration::get('MULTISAFEPAY_DEBUG')),
             'MULTISAFEPAY_ENVIRONMENT' => Tools::getValue('MULTISAFEPAY_ENVIRONMENT', Configuration::get('MULTISAFEPAY_ENVIRONMENT')),
-            'MULTISAFEPAY_DAYS_ACTIVE' => Tools::getValue('MULTISAFEPAY_DAYS_ACTIVE', Configuration::get('MULTISAFEPAY_DAYS_ACTIVE')),
-            'MULTISAFEPAY_SECONDS_ACTIVE' => Tools::getValue('MULTISAFEPAY_SECONDS_ACTIVE', Configuration::get('MULTISAFEPAY_SECONDS_ACTIVE'))
+            'MULTISAFEPAY_TIME_ACTIVE' => Tools::getValue('MULTISAFEPAY_TIME_ACTIVE', Configuration::get('MULTISAFEPAY_TIME_ACTIVE')),
+            'MULTISAFEPAY_TIME_UNIT' => Tools::getValue('MULTISAFEPAY_TIME_UNIT', Configuration::get('MULTISAFEPAY_TIME_UNIT'))
         );
         $field_values['multisafepay_tab'] = 'main_configuration';
 
@@ -636,17 +636,23 @@ class Multisafepay extends PaymentModule
 
                     array(
                         'type' => 'text',
-                        'label' => $this->l('Days active'),
-                        'hint' => $this->trans('The days the transaction payment link can be used', array(), 'Modules.Multisafepay.Admin'),
-                        'name' => 'MULTISAFEPAY_DAYS_ACTIVE',
+                        'label'=>  $this->l('Time before a transaction will expire'),
+                        'hint' => $this->trans('The transaction will expire after the given time.', array(), 'Modules.Multisafepay.Admin'),
+                        'name' => 'MULTISAFEPAY_TIME_ACTIVE',
                         'required' => true
                     ),
                     array(
-                        'type' => 'text',
-                        'label' => $this->l('Seconds active'),
-                        'hint' => $this->trans('The seconds the transaction payment link can be used. This option will overwrite the days active setting', array(), 'Modules.Multisafepay.Admin'),
-                        'name' => 'MULTISAFEPAY_SECONDS_ACTIVE',
-                        'required' => true
+                        'type' =>  'select',
+                        'name' =>  'MULTISAFEPAY_TIME_UNIT',
+                        'required' =>  true,
+                        'options'  =>  array(
+                                          'query' => array(   array ( 'id'   => 'days',   'name' => $this->l('Days')),
+                                                              array ( 'id'   => 'hours',  'name' => $this->l('Hours')),
+                                                              array ( 'id'   => 'seconds','name' => $this->l('Seconds'))
+                                                    ),
+                                            'id'    => 'id',
+                                            'name'  => 'name'
+                                            )
                     ),
                     array(
                         'type' => 'hidden',
