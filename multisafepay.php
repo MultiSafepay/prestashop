@@ -50,6 +50,8 @@ class Multisafepay extends PaymentModule
     public $carriers;
     public $groups;
 
+    public $multisafepay_js;
+    public $multisafepay_css;
     /*
      * This array contains all supported gifcards and is used to generate the configuration an paymentOptions
      */
@@ -146,7 +148,12 @@ class Multisafepay extends PaymentModule
             }
         }
 
-
+        /*
+            Define the location of the CSS and JS file
+        */
+        $protocol = Tools::getShopDomainSsl(true, true);
+        $this->multisafepay_js  = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/js/multisafepay.js';
+        $this->multisafepay_css = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/css/multisafepay.css';
 
         /*
          * Sort the giftcards based by provided sort order configuration value
@@ -404,10 +411,6 @@ class Multisafepay extends PaymentModule
             }
         }
 
-        $protocol = Tools::getShopDomainSsl(true, true);
-        $multisafepay_js = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/js/multisafepay.js';
-        $multisafepay_css = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/css/multisafepay.css';
-
         if (!Tools::getValue('tab')) {
             $active_tab = 'main_configuration';
         } else {
@@ -417,8 +420,8 @@ class Multisafepay extends PaymentModule
         $template_vars = array(
             'tabs' => $this->getMultiSafepayTabs(),
             'active_tab' => $active_tab,
-            'multisafepay_js' => $multisafepay_js,
-            'multisafepay_css' => $multisafepay_css
+            'multisafepay_js' => $this->multisafepay_js,
+            'multisafepay_css' => $this->multisafepay_css
         );
 
         $this->context->smarty->assign($template_vars);
@@ -890,15 +893,14 @@ class Multisafepay extends PaymentModule
 
                     switch ($gateway['code']) {
                         case "ideal":
-                            $externalOption->setForm($this->getIdealIssuers());
+                            $externalOption->setForm($this->getIdeal());
                             break;
-                        /* case "klarna":
-                          $this->context->smarty->assign(['klarna_action' => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => 'klarna'), true)]);
-                          $externalOption->setForm($this->context->smarty->fetch('module:multisafepay/views/templates/front/klarna_form.tpl'));
-                          break;
-                          case "payafter":
-                          $externalOption->setForm($this->context->smarty->fetch('module:multisafepay/views/templates/front/payafter_form.tpl'));
-                          break; */
+                        case "payafter":
+                            $externalOption->setForm($this->getPayafter());
+                            break;
+                        case "einvoice":
+                            $externalOption->setForm($this->getEinvoice());
+                            break;
                     }
                     $payment_options[] = $externalOption;
                 }
@@ -966,7 +968,7 @@ class Multisafepay extends PaymentModule
      * This function requests the ideal issuers
      */
 
-    protected function getIdealIssuers()
+    protected function getIdeal()
     {
         $multisafepay = new MspClient();
         $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
@@ -980,12 +982,98 @@ class Multisafepay extends PaymentModule
 
         $this->context->smarty->assign([
             'action' => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => 'ideal'), true),
-            'select_bank' => $this->l('Kies uw bank'),
+            'select_bank' => $this->l('Choose your bank'),
             'issuers' => $issuers
         ]);
 
         return $this->context->smarty->fetch('module:multisafepay/views/templates/front/issuers.tpl');
     }
+
+    protected function getPayafter()
+    {
+        $this->context->smarty->assign([
+            'action'            => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => 'payafter'), true),
+            'multisafepay_js'   => $this->multisafepay_js,
+            'multisafepay_css'  => $this->multisafepay_css,
+
+            'label_birthday'    => $this->l('Birthday'),
+            'label_phone'       => $this->l('Phone'),
+            'label_bankaccount' => $this->l('Bank account'),
+
+            'birthday'          => $this->getBirthday(),
+            'phone'             => $this->getPhoneNumber(),
+            'bankaccount'       => '',
+
+            'terms'             => sprintf ( $this->l('By confirming this order you agree with the %s Terms and Conditions %s of MultiFactor'),  '<a href="https://www.multifactor.nl/voorwaarden/betalingsvoorwaarden-consument/" target="_blank">' , '</a>')
+
+        ]);
+
+        return $this->context->smarty->fetch('module:multisafepay/views/templates/front/payafter.tpl');
+    }
+
+    protected function getEinvoice()
+    {
+        $this->context->smarty->assign([
+            'action'            => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => 'einvoice'), true),
+            'multisafepay_js'   => $this->multisafepay_js,
+            'multisafepay_css'  => $this->multisafepay_css,
+
+            'label_birthday'    => $this->l('Birthday'),
+            'label_phone'       => $this->l('Phone'),
+            'label_bankaccount' => $this->l('Bank account'),
+
+            'birthday'          => $this->getBirthday(),
+            'phone'             => $this->getPhoneNumber(),
+            'bankaccount'       => '',
+
+            'terms'             => sprintf ( $this->l('By confirming this order you agree with the %s Terms and Conditions %s of MultiFactor'),  '<a href="https://www.multifactor.nl/voorwaarden/betalingsvoorwaarden-consument/" target="_blank">' , '</a>')
+
+        ]);
+
+        return $this->context->smarty->fetch('module:multisafepay/views/templates/front/einvoice.tpl');
+    }
+
+
+    private function getBirthday()
+    {
+        $birthday = null;
+
+        // Get birthday from Customer
+        $customer = new Customer($this->context->cart->id_customer);
+
+        if (Validate::isLoadedObject($customer)) {
+            // Prestashop use format YYYY-M-DD, Swap this to DD-MM-YYYY if not 0000-00-00
+            if ($customer->birthday != '0000-00-00') {
+                $birthday = preg_replace("/(^(\d{4}).(\d{2}).(\d{2}))/", "$4-$3-$2", $customer->birthday);
+            }
+        }
+        return $birthday;
+    }
+
+    private function getPhoneNumber()
+    {
+        $phone = null;
+
+        // Get phonenumber from Customer
+        $address  = new Address((int)$this->context->cart->id_address_invoice);
+        if (Validate::isLoadedObject($address)) {
+            $phone = $address->phone ?: $address->phone_mobile;
+        }
+        return $phone;
+    }
+
+    private function getGender()
+    {
+        $gender = null;
+
+        // Get Gender from Customer
+        $customer = new Customer($this->context->cart->id_customer);
+        if (Validate::isLoadedObject($customer)) {
+            $gender = $customer->id_gender;
+        }
+        return $gender;
+    }
+
 
     public function checkCurrency($cart)
     {

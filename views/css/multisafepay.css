@@ -95,3 +95,28 @@ i span{
   margin-bottom: 10px;
 }
 
+label.multisafepay{
+    width:100px;
+    float:left;
+    text-align:right;
+    font-size: 15px;
+    margin-top:-20px; 
+    margin-left:-10px; 
+    margin-right:10px; 
+    margin-bottom:2px;  
+    display: block;
+    color: #777;
+    font-weight: normal;
+}
+
+input.multisafepay{
+    width:175px;
+    font-size: 15px;
+    margin-top:-20px; 
+    margin-left:-15px; 
+    margin-right:0px; 
+    margin-bottom:2px;  
+    display: block;
+    color: #232323;
+    font-weight: normal;
+}
