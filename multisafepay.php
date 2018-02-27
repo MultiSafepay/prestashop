@@ -96,7 +96,7 @@ class Multisafepay extends PaymentModule
         array("code" => "paypal", "name" => "PayPal", 'config' => true),
         array("code" => "giropay", "name" => "Giropay", 'config' => true),
         array("code" => "directbank", "name" => "Sofort", 'config' => true),
-        array("code" => "ing", "name" => "ING Homepay", 'config' => true),
+        array("code" => "inghome", "name" => "ING Homepay", 'config' => true),
         array("code" => "belfius", "name" => "Belfius", 'config' => true),
         array("code" => "trustpay", "name" => "TrustPay", 'config' => true),
         array("code" => "kbc", "name" => "KBC", 'config' => true),
