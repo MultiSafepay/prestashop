@@ -401,6 +401,16 @@ class Multisafepay extends PaymentModule
             $postMessages['errors'] = $this->checkApiKey();
             return $postMessages;
         }
+
+        if (Tools::isSubmit('btnGatewaysSubmit')) {
+            $postMessages['warnings'] = $this->getActiveGateways();
+            return $postMessages;
+        }
+
+         if (Tools::isSubmit('btnGiftcardsSubmit')) {
+            $postMessages['warnings'] = $this->getActiveGiftcards();
+            return $postMessages;
+        }
     }
 
     public function getContent()
@@ -1005,6 +1015,69 @@ class Multisafepay extends PaymentModule
         return $this->context->smarty->fetch('module:multisafepay/views/templates/front/issuers.tpl');
     }
 
+    /*
+     * This function requests the ideal issuers
+     */
+
+    protected function getActiveGateways()
+    {
+        $warnings = array();
+
+        $multisafepay = new MspClient();
+        $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
+        $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
+
+        if (!empty($multisafepay->getApiKey())) {
+
+            $mspGateways = array_column($multisafepay->gateways->get(), 'id');
+            $mspGateways = array_map('strtolower', $mspGateways);
+
+            // Loop all available gateways in this plug-in
+            foreach ($this->gateways as $gateway){
+
+                // Skip connect as it is not a real gateway
+                if ($gateway["code"] == 'connect' ){
+                    continue;
+                }
+
+                // check if gateway is enabled in the plug-in
+                if ( Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"]) ) {
+                    if ( !in_array( $gateway["code"], $mspGateways )) {
+                        $warnings[] = sprintf ("%s %s",  $gateway["name"], $this->l('Is not activated in your Multisafepay account'));
+                    }
+                }
+            }
+        }
+        return $warnings;
+    }
+
+
+    protected function getActiveGiftcards()
+    {
+        $warnings = array();
+
+        $multisafepay = new MspClient();
+        $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
+        $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
+
+        if (!empty($multisafepay->getApiKey())) {
+
+            $mspGateways = array_column($multisafepay->gateways->get(), 'id');
+            $mspGateways = array_map('strtolower', $mspGateways);
+
+            // Loop all available gateways in this plug-in
+            foreach ($this->giftcards as $giftcard){
+
+                // check if giftcards is enabled in the plug-in
+                if ( Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"]) ) {
+                    if ( !in_array( $giftcard["code"], $mspGateways )) {
+                        $warnings[] = sprintf ("%s %s",  $giftcard["name"], $this->l('Is not activated in your Multisafepay account'));
+                    }
+                }
+            }
+        }
+        return $warnings;
+    }
 
     protected function checkApiKey()
     {
