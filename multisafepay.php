@@ -406,12 +406,12 @@ class Multisafepay extends PaymentModule
     public function getContent()
     {
         $this->currencies = Currency::getCurrencies();
-        $this->groups = Group::getGroups($this->context->language->id);
-        $this->carriers = Carrier::getCarriers($this->context->language->id, false, false, false, null, Carrier::ALL_CARRIERS);
-        $this->countries = Country::getCountries($this->context->language->id);
+        $this->groups     = Group::getGroups($this->context->language->id);
+        $this->carriers   = Carrier::getCarriers($this->context->language->id, false, false, false, null, Carrier::ALL_CARRIERS);
+        $this->countries  = Country::getCountries($this->context->language->id);
 
         $protocol = Tools::getShopDomainSsl(true, true);
-        $multisafepay_js = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/js/multisafepay.js';
+        $multisafepay_js  = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/js/multisafepay.js';
         $multisafepay_css = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/css/multisafepay.css';
 
         if (!Tools::getValue('tab')) {
@@ -420,25 +420,20 @@ class Multisafepay extends PaymentModule
             $active_tab = Tools::getValue('multisafepay_tab');
         }
 
-        $template_vars = array(
-            'tabs' => $this->getMultiSafepayTabs(),
-            'active_tab' => $active_tab,
-            'multisafepay_js' => $multisafepay_js,
-            'multisafepay_css' => $multisafepay_css
-        );
+        $postMessages = $this->_postValidation();
 
-        $this->context->smarty->assign($template_vars);
-
-        if (Tools::isSubmit('btnSubmit') || Tools::isSubmit('btnGatewaysSubmit') || Tools::isSubmit('btnGiftcardsSubmit') || Tools::isSubmit('btnSubmitGiftcardConfig') || Tools::isSubmit('btnSubmitGatewayConfig')) {
-
-            $postMessages = $this->_postValidation();
-
-            if (empty($postMessages['errors'])) {
-                $this->_postProcess();
-            }
-            $this->context->smarty->assign( array ('errors'    => $postMessages['errors'],
-                                                   'warnings'  => $postMessages['warnings']));
+        if (empty($postMessages['errors'])) {
+            $this->_postProcess();
         }
+
+        $this->context->smarty->assign(array(
+            'tabs'              => $this->getMultiSafepayTabs(),
+            'active_tab'        => $active_tab,
+            'multisafepay_js'   => $multisafepay_js,
+            'multisafepay_css'  => $multisafepay_css,
+            'errors'            => $postMessages['errors'],
+            'warnings'          => $postMessages['warnings']
+        ));
 
 
         return $this->display(__FILE__, 'views/templates/admin/tabs.tpl');
