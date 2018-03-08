@@ -41,9 +41,6 @@ class MspClient
     protected $api_key;
     public $api_url;
     public $api_endpoint;
-    public $request;
-    public $response;
-    public $debug;
 
     public function __construct()
     {
@@ -62,24 +59,9 @@ class MspClient
         }
     }
 
-    public function getRequest()
-    {
-        return $this->request;
-    }
-
-    public function getResponse()
-    {
-        return $this->response;
-    }
-
     public function setApiUrl($url)
     {
         $this->api_url = trim($url);
-    }
-
-    public function setDebug($debug)
-    {
-        $this->debug = trim($debug);
     }
 
     public function setApiKey($api_key)
@@ -94,9 +76,6 @@ class MspClient
 
     public function processAPIRequest($http_method, $api_method, $http_body = NULL)
     {
-        if (empty($this->api_key)) {
-            //throw new \Magento\Framework\Validator\Exception(__('Please configure your MultiSafepay API Key.'));
-        }
 
         $url = $this->api_url . $api_method;
         $ch = curl_init($url);
@@ -112,8 +91,6 @@ class MspClient
             curl_setopt($ch, CURLOPT_POSTFIELDS, $http_body);
         }
 
-
-
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLINFO_HEADER_OUT, true);
         curl_setopt($ch, CURLOPT_ENCODING, "");
@@ -125,15 +102,14 @@ class MspClient
 
         $body = curl_exec($ch);
 
-        if ($this->debug) {
-            $this->request = $http_body;
-            $this->response = $body;
-        }
-
         if (curl_errno($ch)) {
-            //throw new \Magento\Framework\Validator\Exception(__("Unable to communicatie with the MultiSafepay payment server (" . curl_errno($ch) . "): " . curl_error($ch) . "."));
+            if (Configuration::get('MULTISAFEPAY_DEBUG')) {
+                $logger = new FileLogger(0);
+                $logger->setFilename(_PS_ROOT_DIR_ . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'multisafepay' . DIRECTORY_SEPARATOR . 'logs/multisafepay.log');
+                $logger->logDebug("Curl Error -------------------------");
+                $logger->logDebug("Unable to communicate with the MultiSafepay payment server (" . curl_errno($ch) . "): " . curl_error($ch));
+            }
         }
-
         curl_close($ch);
         return $body;
     }
