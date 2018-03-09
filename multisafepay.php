@@ -29,6 +29,8 @@
  */
 
 require(dirname(__FILE__) . '/models/Api/MspClient.php');
+require(dirname(__FILE__) . '/helpers/CheckConnection.php');
+
 
 use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
 
@@ -39,7 +41,6 @@ if (!defined('_PS_VERSION_')) {
 class Multisafepay extends PaymentModule
 {
 
-    protected $_html = '';
     protected $_postErrors = array();
     public $details;
     public $owner;
@@ -98,7 +99,7 @@ class Multisafepay extends PaymentModule
         array("code" => "paypal", "name" => "PayPal", 'config' => true),
         array("code" => "giropay", "name" => "Giropay", 'config' => true),
         array("code" => "directbank", "name" => "Sofort", 'config' => true),
-        array("code" => "ing", "name" => "ING Homepay", 'config' => true),
+        array("code" => "inghome", "name" => "ING Homepay", 'config' => true),
         array("code" => "belfius", "name" => "Belfius", 'config' => true),
         array("code" => "trustpay", "name" => "TrustPay", 'config' => true),
         array("code" => "kbc", "name" => "KBC", 'config' => true),
@@ -394,22 +395,31 @@ class Multisafepay extends PaymentModule
      * getContents creates the content for the module. getMultiSafepayTabs creates the content for the specific tabs and are used for the main tabs content view
      */
 
+    private function _postValidation()
+    {
+        $postMessages['errors'] = array();
+        $postMessages['warnings'] = array();
+
+
+        if ( Tools::isSubmit('btnSubmit') &&
+            ( Configuration::get('MULTISAFEPAY_ENVIRONMENT') != Tools::getValue('MULTISAFEPAY_ENVIRONMENT') ||
+              Configuration::get('MULTISAFEPAY_API_KEY')     != Tools::getValue('MULTISAFEPAY_API_KEY') ) ) {
+
+            $postMessages['errors'] = $this->checkApiKey();
+            return $postMessages;
+        }
+    }
+
     public function getContent()
     {
         $this->currencies = Currency::getCurrencies();
-        $this->groups = Group::getGroups($this->context->language->id);
-        $this->carriers = Carrier::getCarriers($this->context->language->id, false, false, false, null, Carrier::ALL_CARRIERS);
-        $this->countries = Country::getCountries($this->context->language->id);
+        $this->groups     = Group::getGroups($this->context->language->id);
+        $this->carriers   = Carrier::getCarriers($this->context->language->id, false, false, false, null, Carrier::ALL_CARRIERS);
+        $this->countries  = Country::getCountries($this->context->language->id);
 
-        if (Tools::isSubmit('btnSubmit') || Tools::isSubmit('btnGatewaysSubmit') || Tools::isSubmit('btnGiftcardsSubmit') || Tools::isSubmit('btnSubmitGiftcardConfig') || Tools::isSubmit('btnSubmitGatewayConfig')) {
-            if (!count($this->_postErrors)) {
-                $this->_postProcess();
-            } else {
-                foreach ($this->_postErrors as $err) {
-                    $this->_html .= $this->displayError($err);
-                }
-            }
-        }
+        $protocol = Tools::getShopDomainSsl(true, true);
+        $multisafepay_js  = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/js/multisafepay.js';
+        $multisafepay_css = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/css/multisafepay.css';
 
         if (!Tools::getValue('tab')) {
             $active_tab = 'main_configuration';
@@ -417,14 +427,22 @@ class Multisafepay extends PaymentModule
             $active_tab = Tools::getValue('multisafepay_tab');
         }
 
-        $template_vars = array(
-            'tabs' => $this->getMultiSafepayTabs(),
-            'active_tab' => $active_tab,
-            'multisafepay_js' => $this->multisafepay_js,
-            'multisafepay_css' => $this->multisafepay_css
-        );
+        $postMessages = $this->_postValidation();
 
-        $this->context->smarty->assign($template_vars);
+        if (empty($postMessages['errors'])) {
+            $this->_postProcess();
+        }
+
+        $this->context->smarty->assign(array(
+            'tabs'              => $this->getMultiSafepayTabs(),
+            'active_tab'        => $active_tab,
+            'multisafepay_js'   => $multisafepay_js,
+            'multisafepay_css'  => $multisafepay_css,
+            'errors'            => $postMessages['errors'],
+            'warnings'          => $postMessages['warnings']
+        ));
+
+
         return $this->display(__FILE__, 'views/templates/admin/tabs.tpl');
     }
 
@@ -452,7 +470,6 @@ class Multisafepay extends PaymentModule
             'title' => 'Giftcards',
             'content' => $this->getGiftcards()
         );
-
 
         $tabs[] = array(
             'id' => 'gateway_restrictions_configuration',
@@ -831,12 +848,12 @@ class Multisafepay extends PaymentModule
                 /*
                  *  start restrictions
                  */
-                $billing = new Address($this->context->cart->id_address_invoice);
-                $id_country = $billing->id_country;
-                $id_currency = $params['cart']->id_currency;
-                $id_carrier = $params['cart']->id_carrier;
-                $id_shop_group = $params['cart']->id_shop_group;
-                $amount = $params['cart']->getOrderTotal(true, Cart::BOTH);
+                $billing        = new Address($this->context->cart->id_address_invoice);
+                $id_country     = $billing->id_country;
+                $id_currency    = $params['cart']->id_currency;
+                $id_carrier     = $params['cart']->id_carrier;
+                $id_shop_group  = $params['cart']->id_shop_group;
+                $amount         = $params['cart']->getOrderTotal(true, Cart::BOTH);
 
 
                 if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CURRENCY_' . $id_currency) == 'on' && Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $id_shop_group) == "on" && Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $id_carrier) == 'on' && Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_' . $id_country) == 'on') {
@@ -1074,6 +1091,15 @@ class Multisafepay extends PaymentModule
         return $gender;
     }
 
+
+
+    protected function checkApiKey()
+    {
+        $Check = new CheckAPI();
+        $error = $Check->myConnection( Tools::getValue('MULTISAFEPAY_API_KEY'), Tools::getValue('MULTISAFEPAY_ENVIRONMENT'));
+
+        return $error;
+    }
 
     public function checkCurrency($cart)
     {
