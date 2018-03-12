@@ -58,13 +58,6 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         $billing_country = new Country($billing->id_country);
         $currency = new Currency($this->context->cart->id_currency);
 
-        //@TODO: Better way to detect if we should use direct/redirect
-        if (Tools::getValue('issuer') || Tools::getValue('gateway') == "banktrans" || Tools::getValue('birthday')) {
-            $type = 'direct';
-        } else {
-            $type = 'redirect';
-        }
-
         $lang_iso = Language::getIsoById($this->context->cart->id_lang);
         $locale = Language::getLocaleByIso($lang_iso);
         $real_locale = str_replace('-', '_', $locale);
@@ -79,6 +72,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         list ($street_billing,  $house_number_billing)  = $this->parseAddress($billing->address1,  $billing->address2);
         list ($street_shipping, $house_number_shipping) = $this->parseAddress($shipping->address1, $shipping->address2);
 
+        list ($type, $gateway_info) = $this->getTypeAndGatewayInfo($customer);
 
         $transaction_data = array(
             "type" => $type,
@@ -131,9 +125,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             ),
             "shopping_cart" => $this->shopping_cart,
             "checkout_options" => $this->checkout_options,
-            "gateway_info" => array(
-                "issuer_id" => Tools::getValue('issuer') ? Tools::getValue('issuer') : NULL
-            ),
+            "gateway_info" => $gateway_info,
             "plugin" => array(
                 "shop" => 'Prestashop',
                 "shop_version" => _PS_VERSION_,
@@ -373,4 +365,50 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 
         return array($street, $apartment);
     }
+
+    private function getTypeAndGatewayInfo($customer)
+    {
+        switch ( Tools::getValue('gateway'))
+        {
+            case 'ideal':
+                $type         = 'direct';
+                $gateway_info = array(
+                    "issuer_id" => Tools::getValue('issuer')
+                );
+                break;
+
+//          case 'klarna':
+            case 'payafter':
+            case 'einvoice':
+                $type         = 'direct';
+                $gateway_info = array(
+                    'birthday'    => Tools::getValue('birthday'),
+                    'bankaccount' => Tools::getValue('bankaccount'),
+                    'phone'       => Tools::getValue('phone'),
+                    'gender'      => Tools::getValue('gender'),
+                    'email'       => $customer->email
+                    );
+                break;
+
+
+//          case 'alipay':
+            case 'banktrans':
+//          case 'belfius':
+//          case 'dirdeb':
+//          case 'directbank':
+            case 'ing':
+            case 'kbc':
+            case 'paypal':
+                // No additional data needed
+                $type = 'direct';
+                break;
+
+            default:
+                $type = 'redirect';
+                $gateway_info = array();
+                break;
+        }
+        return (array ($type, $gateway_info));
+    }
+
 }
