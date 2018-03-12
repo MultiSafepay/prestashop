@@ -30,6 +30,7 @@
  */
 require_once dirname(__FILE__) . "/Objects/Orders.php";
 require_once dirname(__FILE__) . "/Objects/Issuers.php";
+require_once dirname(__FILE__) . "/Objects/Gateways.php";
 
 class MspClient
 {
@@ -46,7 +47,7 @@ class MspClient
     {
         $this->orders = new Orders($this);
         $this->issuers = new Issuers($this);
-        //$this->gateways = new Gateways($this);
+        $this->gateways = new Gateways($this);
     }
 
     public function initialize($environment, $api)
