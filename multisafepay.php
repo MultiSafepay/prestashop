@@ -1088,7 +1088,6 @@ class Multisafepay extends PaymentModule
     {
         $this->context->smarty->assign([
             'action'            => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => 'payafter'), true),
-            'multisafepay_js'   => $this->multisafepay_js,
             'multisafepay_css'  => $this->multisafepay_css,
 
             'label_birthday'    => $this->l('Birthday'),
@@ -1110,7 +1109,6 @@ class Multisafepay extends PaymentModule
     {
         $this->context->smarty->assign([
             'action'            => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => 'einvoice'), true),
-            'multisafepay_js'   => $this->multisafepay_js,
             'multisafepay_css'  => $this->multisafepay_css,
 
             'label_birthday'    => $this->l('Birthday'),
