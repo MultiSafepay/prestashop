@@ -179,6 +179,7 @@ class Multisafepay extends PaymentModule
     public function install()
     {
         if (!parent::install() || !$this->registerHook('paymentOptions') || !$this->registerHook('paymentReturn') || !$this->registerHook('actionOrderStatusPostUpdate')
+            || !$this->registerHook('actionFrontControllerSetMedia')
         ) {
             return false;
         }
@@ -227,6 +228,14 @@ class Multisafepay extends PaymentModule
         $this->initializeConfig();
         return true;
     }
+
+
+    public function hookActionFrontControllerSetMedia()
+    {
+        $this->context->controller->addJS($this->_path . 'views/js/multisafepay_front.js');
+    }
+
+
 
     protected function initializeConfig()
     {
