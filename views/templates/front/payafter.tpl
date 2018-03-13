@@ -1,5 +1,4 @@
 <form action="{$action}" id="msp-payafter-form" method="POST" class="additional-information">
-<script type='text/javascript' src="{$multisafepay_js|escape:'htmlall':'UTF-8'}"></script>
 <link href="{$multisafepay_css|escape:'htmlall':'UTF-8'}" rel="stylesheet" type="text/css">
 
   <div class="form-group row">
