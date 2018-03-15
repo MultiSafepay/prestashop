@@ -311,7 +311,7 @@ class Multisafepay extends PaymentModule
                     $this->transaction = $multisafepay->orders->get($endpoint = 'orders', $params['cart']->id, $body = array(), $query_string = false);
                     if ($this->transaction->payment_details->type == 'KLARNA') {
                         $msg = new Message();
-                        $msg->message = $this->l('https://online.klarna.com/invoices/' . $this->transaction->payment_details->external_transaction_id . '.pdf');
+                        $msg->message = 'https://online.klarna.com/invoices/' . $this->transaction->payment_details->external_transaction_id . '.pdf';
                         $msg->id_order = $params['cart']->id;
                         $msg->private = True;
                         $msg->save();
@@ -474,31 +474,31 @@ class Multisafepay extends PaymentModule
         $tabs = array();
         $tabs[] = array(
             'id' => 'main_configuration',
-            'title' => 'MultiSafepay configuration',
+            'title' => $this->l('MultiSafepay configuration'),
             'content' => $this->getMainConfiguration()
         );
 
         $tabs[] = array(
             'id' => 'gateway_configuration',
-            'title' => 'Payment Methods',
+            'title' => $this->l('Payment Methods'),
             'content' => $this->getGateways()
         );
 
         $tabs[] = array(
             'id' => 'giftcard_configuration',
-            'title' => 'Giftcards',
+            'title' => $this->l('Giftcards'),
             'content' => $this->getGiftcards()
         );
 
         $tabs[] = array(
             'id' => 'gateway_restrictions_configuration',
-            'title' => 'Payment Restrictions',
+            'title' => $this->l('Payment Restrictions'),
             'content' => $this->getGatewayRestrictions()
         );
 
         $tabs[] = array(
             'id' => 'giftcard_restrictions_configuration',
-            'title' => 'Giftcard Restrictions',
+            'title' => $this->l('Giftcard Restrictions'),
             'content' => $this->getGiftcardRestrictions()
         );
 
@@ -649,7 +649,7 @@ class Multisafepay extends PaymentModule
                     array(
                         'type' => 'switch',
                         'label' => $this->l('Process live transactions'),
-                        'hint' => $this->trans('If enabled the LIVE API will be used, else the MultiSafepay test environment is active', array(), 'Modules.Multisafepay.Admin'),
+                        'hint' => $this->l('If enabled live transactions will be processed, otherwise test-transactions'),
                         'name' => 'MULTISAFEPAY_ENVIRONMENT',
                         'required' => false,
                         'is_bool' => true,
@@ -668,7 +668,7 @@ class Multisafepay extends PaymentModule
                     ), array(
                         'type' => 'text',
                         'label' => $this->l('MultiSafepay API key'),
-                        'hint' => $this->trans('The MultiSafepay API key can be found within your Multisafepay website configuration using MultiSafepay Control', array(), 'Modules.Multisafepay.Admin'),
+                        'hint' => $this->l('The MultiSafepay API key can be found within your Multisafepay website configuration using MultiSafepay Control'),
                         'name' => 'MULTISAFEPAY_API_KEY',
                         'required' => true
                     ),
@@ -676,7 +676,7 @@ class Multisafepay extends PaymentModule
                     array(
                         'type' => 'text',
                         'label'=>  $this->l('Time before a transaction will expire'),
-                        'hint' => $this->trans('The transaction will expire after the given time.', array(), 'Modules.Multisafepay.Admin'),
+                        'hint' => $this->l('The transaction will expire after the given time.'),
                         'name' => 'MULTISAFEPAY_TIME_ACTIVE',
                         'required' => true
                     ),
@@ -700,7 +700,7 @@ class Multisafepay extends PaymentModule
                     array(
                         'type' => 'switch',
                         'label' => $this->l('Enable Debug'),
-                        'hint' => $this->trans('When enabled, all API requests and responses are logged within the modules/multisafepay/logs/ folder', array(), 'Modules.Multisafepay.Admin'),
+                        'hint' => $this->l('When enabled, all API requests and responses are logged within the modules/multisafepay/logs/ folder'),
                         'name' => 'MULTISAFEPAY_DEBUG',
                         'required' => false,
                         'is_bool' => true,
