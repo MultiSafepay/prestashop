@@ -129,7 +129,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             "plugin" => array(
                 "shop" => 'Prestashop',
                 "shop_version" => _PS_VERSION_,
-                "plugin_version" => ' - Plugin 4.0.0',
+                "plugin_version" => ' - Plugin 4.1.0',
                 "partner" => "MultiSafepay",
             ),
         );
