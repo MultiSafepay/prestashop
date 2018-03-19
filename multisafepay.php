@@ -937,6 +937,10 @@ class Multisafepay extends PaymentModule
                         case "einvoice":
                             $externalOption->setForm($this->getEinvoice());
                             break;
+
+                        default:
+                            $externalOption->setForm($this->getDefault($gateway['code']));
+                            break;
                     }
                     $payment_options[] = $externalOption;
                 }
@@ -993,6 +997,7 @@ class Multisafepay extends PaymentModule
                     $externalOption->setCallToActionText($this->l($giftcard['name']))->setAction($this->context->link->getModuleLink($this->name, 'payment', array('gateway' => $giftcard["code"]), true));
                     $externalOption->setLogo(_MODULE_DIR_ . 'multisafepay/views/images/giftcards/' . $locale . '/' . $giftcard["code"] . '.png');
                     $externalOption->setAdditionalInformation(Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_DESC'));
+                    $externalOption->setForm($this->getDefault($giftcard['code']));
                     $payment_options[] = $externalOption;
                 }
             }
@@ -1062,6 +1067,16 @@ class Multisafepay extends PaymentModule
         return $warnings;
     }
 
+
+    protected function getDefault($payment)
+    {
+        $this->context->smarty->assign([
+            'action' => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => $payment), true),
+            'gateway' => $payment
+        ]);
+
+        return $this->context->smarty->fetch('module:multisafepay/views/templates/front/default.tpl');
+    }
 
     protected function getIdeal()
     {
