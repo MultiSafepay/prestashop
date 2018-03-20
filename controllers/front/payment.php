@@ -401,6 +401,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             case 'paypal':
                 // No additional data needed
                 $type = 'direct';
+                $gateway_info = array();
                 break;
 
             default:
