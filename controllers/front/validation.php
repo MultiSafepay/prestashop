@@ -59,7 +59,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
             if ($type == "notification") {
                 die('ng');
             } else {
-                $this->errors[] = 'There was an error while redirecting you to the order confirmation page. You are redirected to the order history page instead. Because of this it can take some minutes before your new order will be visible within your account';
+                $this->errors[] = $this->module->l('There was an error while redirecting you to the order confirmation page. You are redirected to the order history page instead. Because of this it can take some minutes before your new order will be visible within your account', 'validation');
                 $this->redirectWithNotifications($this->context->link->getPageLink('history', true, null, array()));
             }
         }
@@ -112,7 +112,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                 }
 
                 if (!$authorized) {
-                    die($this->trans('This payment method is not available.', array(), 'Modules.multisafepay.Shop'));
+                    die($this->module->l('This payment method is not available.', 'validation'));
                 }
                 $customer = new Customer($cart->id_customer);
 
@@ -149,7 +149,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                     Tools::redirect('index.php?controller=order-confirmation&id_cart=' . (int) $cart->id . '&id_module=' . (int) $this->module->id . '&id_order=' . $order->id . '&key=' . $customer->secure_key);
                     exit;
                 } else {
-                    $this->errors[] = 'Your transaction was processed, but the correct transaction status couldn\'t not be determined and you are redirected to your order history page instead of the order confirmation page. Transaction status:' . $this->transaction->status;
+                    $this->errors[] = $this->module->l('Your transaction was processed, but the correct transaction status couldn\'t not be determined and you are redirected to your order history page instead of the order confirmation page. Transaction status:','validation') . $this->transaction->status;
                     $this->unlock();
                     $this->redirectWithNotifications($this->context->link->getPageLink('history', true, null, array()));
                     exit;

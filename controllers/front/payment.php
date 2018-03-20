@@ -79,7 +79,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             "order_id" => $this->context->cart->id,
             "currency" => $currency->iso_code,
             "amount" => round(($this->context->cart->getOrderTotal(true, Cart::BOTH) * 100), 2),
-            "description" => 'Order of Cart: ' . $this->context->cart->id,
+            "description" => $this->module->l('Order of Cart: ', 'payment') . $this->context->cart->id,
             "var1" => "",
             "var2" => "",
             "var3" => "",
@@ -159,9 +159,9 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 if ($multisafepay->orders->result->error_code == '1006') {
                     $new_cart = $this->context->cart->duplicate();
                     if (!$new_cart || !Validate::isLoadedObject($new_cart['cart'])) {
-                        $this->errors[] = Tools::displayError('Transaction request failed because the cart ID was already used and we couldn\'t create a new cart.');
+                        $this->errors[] = Tools::displayError($this->module->l('Transaction request failed because the cart ID was already used and we couldn\'t create a new cart.', 'payment'));
                     } elseif (!$new_cart['success']) {
-                        $this->errors[] = Tools::displayError('Transaction request failed because the cart ID was already used and we couldn\'t create a new cart because the products are no longer available.');
+                        $this->errors[] = Tools::displayError($this->module->l('Transaction request failed because the cart ID was already used and we couldn\'t create a new cart because the products are no longer available.', 'payment'));
                     } else {
                         //Remove the old cart as this can't be used for a MultiSafepay transaction request anymore.
                         $this->context->cart->delete();
@@ -178,7 +178,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 
                         $result = $multisafepay->orders->post($transaction_data);
                         if (!empty($multisafepay->orders->result->error_code)) {
-                            $this->errors[] = 'There was an error processing your transaction request, please try again with another payment method. Error: ' . $multisafepay->orders->result->error_code . ' - ' . $multisafepay->orders->result->error_info;
+                            $this->errors[] = $this->module->l('There was an error processing your transaction request, please try again with another payment method. Error: ', 'payment') . $multisafepay->orders->result->error_code . ' - ' . $multisafepay->orders->result->error_info;
                             $this->redirectWithNotifications($this->context->link->getPageLink('order', true, null, array('step' => '3')));
                         } else {
                             //For banktransfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wiretransafer email from Prestashop and provide the payment data.
@@ -186,7 +186,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                                 $mailVars = array(
                                     '{bankwire_owner}' => $result->gateway_info->destination_holder_name,
                                     '{bankwire_details}' => $result->gateway_info->destination_holder_iban,
-                                    '{bankwire_address}' => $this->module->l('Betaalkenmerk : ', 'payment') . $result->gateway_info->reference
+                                    '{bankwire_address}' => $this->module->l('Payment reference : ', 'payment') . $result->gateway_info->reference
                                 );
 
                                 $this->module->validateOrder((int) $new_cart['cart']->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $multisafepay->orders->result->data->payment_details->type, null, $mailVars, (int) $currency->id, false, $customer->secure_key);
@@ -198,7 +198,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                         }
                     }
                 }
-                $this->errors[] = 'There was an error processing your transaction request, please try again with another payment method. Error: ' . $multisafepay->orders->result->error_code . ' - ' . $multisafepay->orders->result->error_info;
+                $this->errors[] = $this->module->l('There was an error processing your transaction request, please try again with another payment method. Error: ', 'payment') . $multisafepay->orders->result->error_code . ' - ' . $multisafepay->orders->result->error_info;
                 $this->redirectWithNotifications($this->context->link->getPageLink('order', true, null, array('step' => '3')));
             } else {
                 //For banktransfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wiretransafer email from Prestashop and provide the payment data.
@@ -206,7 +206,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                     $mailVars = array(
                         '{bankwire_owner}' => $result->gateway_info->destination_holder_name,
                         '{bankwire_details}' => $result->gateway_info->destination_holder_iban,
-                        '{bankwire_address}' => $this->module->l('Betaalkenmerk : ', 'payment') . $result->gateway_info->reference
+                        '{bankwire_address}' => $this->module->l('Payment reference : ', 'payment') . $result->gateway_info->reference
                     );
                     $this->module->validateOrder((int) $this->context->cart->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $multisafepay->orders->result->data->payment_details->type, null, $mailVars, (int) $currency->id, false, $customer->secure_key);
                     Tools::redirect($this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect", "transactionid" => $this->context->cart->id), true));
@@ -293,7 +293,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 
             $this->shopping_cart['items'][] = array(
                 'name' => 'Fee',
-                'description' => 'Fee',
+                'description' => $this->module->l('Fee', 'payment'),
                 'unit_price' => $cart->feeamount,
                 'quantity' => 1,
                 'merchant_item_id' => 'Fee',
@@ -307,7 +307,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         if ($total_data['total_discounts'] > 0) {
             $this->shopping_cart['items'][] = array(
                 'name' => 'Discount',
-                'description' => 'Discount',
+                'description' => $this->module->l('Discount', 'payment'),
                 'unit_price' => round(-$total_data['total_discounts'], 4),
                 'quantity' => 1,
                 'merchant_item_id' => 'Discount',
@@ -321,7 +321,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         if ($total_data['total_wrapping'] > 0) {
             $this->shopping_cart['items'][] = array(
                 'name' => 'Wrapping',
-                'description' => 'Wrapping',
+                'description' => $this->module->l('Wrapping', 'payment'),
                 'unit_price' => round($total_data['total_wrapping_tax_exc'], 4),
                 'quantity' => 1,
                 'merchant_item_id' => 'Wrapping',
@@ -336,7 +336,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         if ($total_data['total_shipping'] > 0) {
             $this->shopping_cart['items'][] = array(
                 'name' => 'Shipping',
-                'description' => 'Shipping',
+                'description' => $this->module->l('Shipping', 'payment'),
                 'unit_price' => round($total_data['total_shipping_tax_exc'], 4),
                 'quantity' => 1,
                 'merchant_item_id' => 'msp-shipping',
