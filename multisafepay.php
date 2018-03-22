@@ -64,7 +64,7 @@ class Multisafepay extends PaymentModule
         array("code" => "parfumcadeaukaart", "name" => "Parfumcadeaukaart", 'config' => true),
         array("code" => "yourgift", "name" => "Yourgift", 'config' => true),
         array("code" => "wijncadeau", "name" => "Wijncadeau", 'config' => true),
-        array("code" => "gezondheidsbon", "name" => "Gezonheidsbon", 'config' => true),
+        array("code" => "gezondheidsbon", "name" => "Gezondheidsbon", 'config' => true),
         array("code" => "fashioncheque", "name" => "Fashioncheque", 'config' => true),
         array("code" => "fashiongiftcard", "name" => "Fashiongiftcard", 'config' => true),
         array("code" => "podium", "name" => "Podium", 'config' => true),
