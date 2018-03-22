@@ -873,9 +873,12 @@ class Multisafepay extends PaymentModule
                 $id_carrier     = $params['cart']->id_carrier;
                 $id_shop_group  = $params['cart']->id_shop_group;
                 $amount         = $params['cart']->getOrderTotal(true, Cart::BOTH);
+                $isVirtualCart  = $params['cart']->isVirtualCart();
 
-
-                if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CURRENCY_' . $id_currency) == 'on' && Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $id_shop_group) == "on" && Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $id_carrier) == 'on' && Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_' . $id_country) == 'on') {
+                if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CURRENCY_' . $id_currency)   == 'on' &&
+                    Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_'    . $id_shop_group) == "on" &&
+                    Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_'  . $id_country)    == 'on' &&
+                   (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_'  . $id_carrier)    == 'on' || $isVirtualCart) ) {
                     $active = true;
                 }
 
@@ -972,14 +975,18 @@ class Multisafepay extends PaymentModule
                  *  start restrictions
                  */
                 $billing = new Address($this->context->cart->id_address_invoice);
-                $id_country = $billing->id_country;
-                $id_currency = $params['cart']->id_currency;
-                $id_carrier = $params['cart']->id_carrier;
-                $id_shop_group = $params['cart']->id_shop_group;
-                $amount = $params['cart']->getOrderTotal(true, Cart::BOTH);
+                $id_country     = $billing->id_country;
+                $id_currency    = $params['cart']->id_currency;
+                $id_carrier     = $params['cart']->id_carrier;
+                $id_shop_group  = $params['cart']->id_shop_group;
+                $amount         = $params['cart']->getOrderTotal(true, Cart::BOTH);
+                $isVirtualCart  = $params['cart']->isVirtualCart();
 
 
-                if (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CURRENCY_' . $id_currency) == 'on' && Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_' . $id_shop_group) == "on" && Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $id_carrier) == 'on' && Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_' . $id_country) == 'on') {
+                if (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CURRENCY_' . $id_currency) == 'on' &&
+                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_'    . $id_shop_group) == "on" &&
+                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_' . $id_country) == 'on' &&
+                   (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $id_carrier) == 'on' || $isVirtualCart) ) {
                     $active = true;
                 }
 
