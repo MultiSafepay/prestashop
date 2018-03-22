@@ -541,9 +541,6 @@ class Multisafepay extends PaymentModule
             }
         }
 
-        //print_r($this->gateways);exit;
-
-
         $this->context->smarty->assign(array(
             'groups' => $this->groups,
             'currencies' => $this->currencies,
