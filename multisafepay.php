@@ -277,6 +277,7 @@ class Multisafepay extends PaymentModule
         $this->unregisterHook('paymentOptions');
         $this->unregisterHook('paymentReturn');
         $this->unregisterHook('actionOrderStatusPostUpdate');
+        $this->unregisterHook('actionFrontControllerSetMedia');
 
         Configuration::deleteByName('MULTISAFEPAY_API_KEY');
         Configuration::deleteByName('MULTISAFEPAY_DEBUG');
