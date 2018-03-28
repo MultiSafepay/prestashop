@@ -84,14 +84,14 @@ class Multisafepay extends PaymentModule
      * This array contains all supported paymentmethods and is used to generate the configuration an paymentOptions
      */
     public $gateways = array(
-        array("code" => "ideal", "name" => "Ideal", 'config' => true),
+        array("code" => "ideal", "name" => "iDEAL", 'config' => true),
         array("code" => "dotpay", "name" => "Dotpay", 'config' => true),
         array("code" => "payafter", "name" => "Betaal na Ontvangst", 'config' => true),
         array("code" => "einvoice", "name" => "E-invoice", 'config' => true),
         array("code" => "klarna", "name" => "Klarna Invoice", 'config' => true),
         array("code" => "mistercash", "name" => "Bancontact", 'config' => true),
         array("code" => "visa", "name" => "Visa", 'config' => true),
-        array("code" => "eps", "name" => "Eps", 'config' => true),
+        array("code" => "eps", "name" => "EPS", 'config' => true),
         array("code" => "mastercard", "name" => "Mastercard", 'config' => true),
         array("code" => "banktrans", "name" => "Banktransfer", 'config' => true),
         array("code" => "psafecard", "name" => "Paysafecard", 'config' => true),
