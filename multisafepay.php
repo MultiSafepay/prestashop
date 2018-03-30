@@ -203,6 +203,15 @@ class Multisafepay extends PaymentModule
                 'paid' => false,
                 'logable' => false
             ),
+            'chargeback' => array(
+                'name' => 'chargeback',
+                'send_mail' => true,
+                'color' => '#ec2e15',
+                'invoice' => false,
+                'template' => '',
+                'paid' => false,
+                'logable' => false
+            ),
         );
 
         foreach ($multisafepay_stats as $status => $value) {
