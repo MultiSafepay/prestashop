@@ -140,6 +140,10 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                         $this->create_order = true;
                         $this->order_status = Configuration::get('MULTISAFEPAY_OS_UNCLEARED');
                         break;
+                    default:
+                        $this->create_order = false;
+                        $this->order_status = Configuration::get('PS_OS_ERROR');
+                        break;
                 }
 
                 if ($this->create_order) {
@@ -166,9 +170,11 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                     break;
                 case 'declined':
                     $this->create_order = false;
+                    $this->order_status = Configuration::get('PS_OS_CANCELED');
                     break;
                 case 'cancelled':
                     $this->create_order = false;
+                    $this->order_status = Configuration::get('PS_OS_CANCELED');
                     break;
                 case 'completed':
                     $this->create_order = true;
@@ -176,6 +182,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                     break;
                 case 'expired':
                     $this->create_order = false;
+                    $this->order_status = Configuration::get('PS_OS_CANCELED');
                     break;
                 case 'uncleared':
                     $this->create_order = true;
@@ -191,6 +198,18 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                     break;
                 case 'void':
                     $this->create_order = false;
+                    $this->order_status = Configuration::get('PS_OS_CANCELED');
+                    break;
+
+                case 'chargedback':
+                    $this->create_order = false;
+                    $this->order_status = Configuration::get('MULTISAFEPAY_OS_CHARGEBACK');
+                    break;
+
+
+                default:
+                    $this->create_order = false;
+                    $this->order_status = Configuration::get('PS_OS_ERROR');
                     break;
             }
 
