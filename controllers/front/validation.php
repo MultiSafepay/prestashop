@@ -59,7 +59,10 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
             if ($type == "notification") {
                 die('ng');
             } else {
-                $this->errors[] = $this->module->l('There was an error while redirecting you to the order confirmation page. You are redirected to the order history page instead. Because of this it can take some minutes before your new order will be visible within your account', 'validation');
+                $this->errors[] = $this->module->l('The verification of your payment takes more time than expected.', 'validation');
+                $this->errors[] = $this->module->l('Therefore we cannot redirect you to the order confirmation page.', 'validation');
+                $this->errors[] = $this->module->l('You are redirected to the order history page instead.', 'validation');
+                $this->errors[] = $this->module->l('Because of this it can take some minutes before your new order will be visible within your account.', 'validation');
                 $this->redirectWithNotifications($this->context->link->getPageLink('history', true, null, array()));
             }
         }
