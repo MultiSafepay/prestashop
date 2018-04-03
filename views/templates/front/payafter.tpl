@@ -2,7 +2,7 @@
 <link href="{$multisafepay_css|escape:'htmlall':'UTF-8'}" rel="stylesheet" type="text/css">
 
   <div class="form-group row">
-    <div class="col-md-6">
+    <div class="col-md-8">
     
         <div class='multisafepay-required'>
             <label class='multisafepay'>{$label_birthday}</label>
