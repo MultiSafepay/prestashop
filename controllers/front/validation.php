@@ -124,7 +124,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                 }
 
                 $currency = $this->context->currency;
-                $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
+                $paid =  (float)($this->transaction->amount / 100);
 
                 switch ($this->transaction->status) {
                     case 'initialized':
@@ -150,7 +150,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                 }
 
                 if ($this->create_order) {
-                    $this->module->validateOrder((int) $cart_id, $this->order_status, $total, $this->transaction->payment_details->type, null, '', (int) $currency->id, false, $customer->secure_key);
+                    $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $this->transaction->payment_details->type, null, '', (int) $currency->id, false, $customer->secure_key);
                     $order = new Order(Order::getOrderByCartId((int) $cart_id));
                     $this->unlock();
                     Tools::redirect('index.php?controller=order-confirmation&id_cart=' . (int) $cart->id . '&id_module=' . (int) $this->module->id . '&id_order=' . $order->id . '&key=' . $customer->secure_key);
@@ -251,8 +251,9 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                 if ($this->create_order) {
                     $cart = new Cart($cart_id);
                     $customer = new Customer($cart->id_customer);
-                    $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
-                    $this->module->validateOrder((int) $cart_id, $this->order_status, $total, $this->transaction->payment_details->type, null, '', (int) $cart->id_currency, false, $customer->secure_key);
+                    $paid =  (float)($this->transaction->amount / 100);
+
+                    $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $this->transaction->payment_details->type, null, '', (int) $cart->id_currency, false, $customer->secure_key);
 
                     $order = new Order(Order::getOrderByCartId((int) $cart_id));
                     $this->unlock();
