@@ -42,14 +42,14 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
     {
         $cart_id = Tools::getValue('transactionid');
         $type = Tools::getValue('type');
-        $this->lock_file = 'multisafepay_cart_' . $cart_id . '.lock';
+        $this->lock_file = _PS_MODULE_DIR_ . 'multisafepay' . DIRECTORY_SEPARATOR . 'locks' . DIRECTORY_SEPARATOR . 'multisafepay_cart_' . $cart_id . '.lock';
         $tries = 1;
         while ($tries < $this->timeToWait) {
-            if (file_exists(_PS_ROOT_DIR_ . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'multisafepay' . DIRECTORY_SEPARATOR . 'locks' . DIRECTORY_SEPARATOR . $this->lock_file)) {
+            if (file_exists($this->lock_file)) {
                 sleep(1);
                 $tries++;
             } else {
-                fopen(_PS_ROOT_DIR_ . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'multisafepay' . DIRECTORY_SEPARATOR . 'locks' . DIRECTORY_SEPARATOR . $this->lock_file, "w");
+                fopen($this->lock_file, "w");
                 $tries = 99;
             }
         }
@@ -75,19 +75,29 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
 
         if (Configuration::get('MULTISAFEPAY_DEBUG')) {
             $logger = new FileLogger(0);
-            $logger->setFilename(_PS_ROOT_DIR_ . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'multisafepay' . DIRECTORY_SEPARATOR . 'logs/multisafepay_cart_' . $cart_id . '.log');
+            $logger->setFilename(_PS_MODULE_DIR_ . 'multisafepay' . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'multisafepay_cart_' . $cart_id . '.log');
             $logger->logDebug("Status Request data -------------------------");
             $logger->logDebug($this->transaction);
         }
 
+
+        $cart = new Cart($cart_id);
+        $customer = new Customer($cart->id_customer);
+        if (!Validate::isLoadedObject($customer)) {
+            Tools::redirect('index.php?controller=order&step=1');
+        }
+        if ($cart->id_customer == 0 || $cart->id_address_delivery == 0 || $cart->id_address_invoice == 0 || !$this->module->active) {
+            Tools::redirect('index.php?controller=order&step=1');
+        }
+
+
+        $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
+        $paid  = (float)($this->transaction->amount / 100);
+
+
         if ($type == "redirect") {
 
-            /* wait maximal xx seconds to give PrestaShop the time to create the order */
-            $i = 0;
-            do {
-                sleep (1);
-                $order = new Order(Order::getOrderByCartId((int) $cart_id));
-            } while ( empty ($order->id) && ++$i < $this->timeToWait);
+            $order = new Order(Order::getOrderByCartId((int) $cart_id));
 
             if (isset($order->id_cart) && $order->id_cart > 0) {
                 $url = "index.php?controller=order-confirmation"
@@ -99,32 +109,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                 Tools::redirect($url);
                 exit;
             } else {
-                $cart = $this->context->cart;
 
-                if ($cart->id_customer == 0 || $cart->id_address_delivery == 0 || $cart->id_address_invoice == 0 || !$this->module->active) {
-                    Tools::redirect('index.php?controller=order&step=1');
-                }
-
-                // Check that this payment option is still available in case the customer changed his address just before the end of the checkout process
-                $authorized = false;
-                foreach (Module::getPaymentModules() as $module) {
-                    if ($module['name'] == 'multisafepay') {
-                        $authorized = true;
-                        break;
-                    }
-                }
-
-                if (!$authorized) {
-                    die($this->module->l('This payment method is not available.', 'validation'));
-                }
-                $customer = new Customer($cart->id_customer);
-
-                if (!Validate::isLoadedObject($customer)) {
-                    Tools::redirect('index.php?controller=order&step=1');
-                }
-
-                $currency = $this->context->currency;
-                $paid =  (float)($this->transaction->amount / 100);
 
                 switch ($this->transaction->status) {
                     case 'initialized':
@@ -150,8 +135,17 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                 }
 
                 if ($this->create_order) {
-                    $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $this->transaction->payment_details->type, null, '', (int) $currency->id, false, $customer->secure_key);
+
+                    if ($paid != $total ){
+                        $this->order_status = Configuration::get('PS_OS_ERROR');
+                    }
+
+                    $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $this->transaction->payment_details->type, null, '', (int) $cart->id_currency, false, $customer->secure_key);
                     $order = new Order(Order::getOrderByCartId((int) $cart_id));
+                    if ($paid != $total){
+                         $this->addMessage($order, $customer);
+                    }
+
                     $this->unlock();
                     Tools::redirect('index.php?controller=order-confirmation&id_cart=' . (int) $cart->id . '&id_module=' . (int) $this->module->id . '&id_order=' . $order->id . '&key=' . $customer->secure_key);
                     exit;
@@ -219,43 +213,51 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
 
             $order = new Order(Order::getOrderByCartId((int) $cart_id));
             if (isset($order->id_cart) && $order->id_cart > 0) {
-                $status_history = Db::getInstance()->ExecuteS('SELECT * FROM `' . _DB_PREFIX_ . 'order_history` WHERE `id_order` = ' . (int) $order->id);
-                //Get all previous order stats, if status is not yet added to the order in the past then we update, else the update was already done and the status was changes after and updating it can give a conflict with other processing flows.
-                $status_in_history = false;
+                if ($paid == $total){
 
-                foreach ($status_history as $key => $status) {
+                    $status_history = Db::getInstance()->ExecuteS('SELECT * FROM `' . _DB_PREFIX_ . 'order_history` WHERE `id_order` = ' . (int) $order->id);
+                    //Get all previous order stats, if status is not yet added to the order in the past then we update, else the update was already done and the status was changes after and updating it can give a conflict with other processing flows.
+                    $status_in_history = false;
 
-                    if ($status['id_order_state'] == $this->order_status) {
-                        //status for the update is already in the history, so we don't update
-                        $status_in_history = true;
-                    }
-                }
+                    foreach ($status_history as $key => $status) {
 
-                //status was not in history so lets update the order
-                if (!$status_in_history) {
-                    $history = new OrderHistory();
-                    $history->id_order = (int) $order->id;
-
-                    if ($order->getCurrentState() != $this->order_status) {
-                        $history->changeIdOrderState((int) $this->order_status, $order->id);
-                        $history->add();
+                        if ($status['id_order_state'] == $this->order_status) {
+                            //status for the update is already in the history, so we don't update
+                            $status_in_history = true;
+                        }
                     }
 
-                    if ($this->transaction->status == 'completed') {
-                        $payments = $order->getOrderPaymentCollection();
-                        $payments[0]->transaction_id = $this->transaction->transaction_id;
-                        $payments[0]->update();
+
+                    //status was not in history so lets update the order
+                    if (!$status_in_history) {
+                        $history = new OrderHistory();
+                        $history->id_order = (int) $order->id;
+
+                        if ($order->getCurrentState() != $this->order_status) {
+                            $history->changeIdOrderState((int) $this->order_status, $order->id);
+                            $history->add();
+                        }
+
+                        if ($this->transaction->status == 'completed') {
+                            $payments = $order->getOrderPaymentCollection();
+                            $payments[0]->transaction_id = $this->transaction->transaction_id;
+                            $payments[0]->update();
+                        }
                     }
                 }
             } else {
                 if ($this->create_order) {
-                    $cart = new Cart($cart_id);
-                    $customer = new Customer($cart->id_customer);
-                    $paid =  (float)($this->transaction->amount / 100);
+
+                    if ($paid != $total ){
+                        $this->order_status = Configuration::get('PS_OS_ERROR');
+                    }
 
                     $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $this->transaction->payment_details->type, null, '', (int) $cart->id_currency, false, $customer->secure_key);
-
                     $order = new Order(Order::getOrderByCartId((int) $cart_id));
+                    if ($paid != $total){
+                         $this->addMessage($order, $customer);
+                    }
+
                     $this->unlock();
                     Tools::redirect('index.php?controller=order-confirmation&id_cart=' . (int) $cart->id . '&id_module=' . (int) $this->module->id . '&id_order=' . $order->id . '&key=' . $customer->secure_key);
                     exit;
@@ -268,10 +270,46 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
         exit;
     }
 
-    private function unlock()
+
+    private function addMessage($order, $customer)
     {
-        if (file_exists(_PS_ROOT_DIR_ . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'multisafepay' . DIRECTORY_SEPARATOR . 'locks' . DIRECTORY_SEPARATOR . $this->lock_file))
-            unlink(_PS_ROOT_DIR_ . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'multisafepay' . DIRECTORY_SEPARATOR . 'locks' . DIRECTORY_SEPARATOR . $this->lock_file);
+        $message = $this->module->l('A payment error occurred.', 'validation') . "\r\n" .
+                   $this->module->l('The order amount differs from the amount paid.', 'validation') . "\r\n" .
+                   $this->module->l('This often happens when the payment is done through a second chance mail and the shopping cart has changed after the first payment attempt.', 'validation') . "\r\n" .
+                   $this->module->l('Payment has been made for the following item(s):', 'validation') . "\r\n";
+
+        foreach ($this->transaction->shopping_cart->items as $item => $product){
+            $message .= sprintf("%d x %s \r\n", $product->quantity, $product->name);
+        }
+
+        $message = strip_tags($message);
+        if (Validate::isCleanHtml($message)) {
+
+            // Add this message in the customer thread
+            $customer_thread = new CustomerThread();
+            $customer_thread->id_contact = 0;
+            $customer_thread->id_customer = (int)$order->id_customer;
+            $customer_thread->id_shop = (int)$order->id_shop;
+            $customer_thread->id_order = (int)$order->id;
+            $customer_thread->id_lang = (int)$order->id_lang;
+            $customer_thread->email = $customer->email;
+            $customer_thread->status = 'open';
+            $customer_thread->token = Tools::passwdGen(12);
+            $customer_thread->add();
+
+            $customer_message = new CustomerMessage();
+            $customer_message->id_customer_thread = $customer_thread->id;
+            $customer_message->id_employee = 0;
+            $customer_message->message = $message;
+            $customer_message->private = 1;
+            $customer_message->add();
+        }
     }
 
+
+    private function unlock()
+    {
+        if (file_exists($this->lock_file))
+            unlink($this->lock_file);
+    }
 }

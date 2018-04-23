@@ -65,8 +65,11 @@ $_MODULE['<{multisafepay}prestashop>validation_1b471037b8d972e7a1c73f092f48314a'
 $_MODULE['<{multisafepay}prestashop>validation_967be42836a1a4046dd3b6c724ff9280'] = 'Per questo motivo, non ti possiamo reindirizzare alla pagina di conferma dell’ordine.';
 $_MODULE['<{multisafepay}prestashop>validation_0eda6223181a390463d976ea74be0182'] = 'Sarai reindirizzato alla pagina dello storico dell’ordine.';
 $_MODULE['<{multisafepay}prestashop>validation_f64523764da6c70dc86c9a36464cc315'] = 'Per questa ragione, potranno passare alcuni minuti prima che il tuo nuovo ordine sia visibile sul tuo account.';
-$_MODULE['<{multisafepay}prestashop>validation_e2b7dec8fa4b498156dfee6e4c84b156'] = 'Questo metodo di pagamento non è disponibile';
 $_MODULE['<{multisafepay}prestashop>validation_1dfdb9ea89c155df818ee77b9df0495c'] = 'La transazione è stata processata ma lo status della transazione non può essere determinato. Sarai reindirizzato alla pagina dello storico dell’ordine invece che alla pagina di conferma dell’ordine. Status della transazione:';
+$_MODULE['<{multisafepay}prestashop>validation_56e50d97e90bb9f440b22d336bd30240'] = 'C’è stato un errore durante il pagamento.';
+$_MODULE['<{multisafepay}prestashop>validation_04216e108cafd4208b58d4cf5f71b7bb'] = 'L’ammontare dell’ordine è diverso dall’ammontare pagato.';
+$_MODULE['<{multisafepay}prestashop>validation_c04e9b6aca01f2462cc8c8d5a5d536b2'] = 'Questo errore avviene solitamente quando il consumatore paga attraverso la mail di Second Chance ma gli articoli del carrello vengono modificati dopo il primo tentativo di pagamento.';
+$_MODULE['<{multisafepay}prestashop>validation_1d24a346c576a1b6140a1174368e4601'] = 'Il pagamento è stato effettuato per questo/i articolo/i:';
 $_MODULE['<{multisafepay}prestashop>checkconnection_033bd94b1168d7e4f0d644c3c95e35bf'] = 'TEST';
 $_MODULE['<{multisafepay}prestashop>checkconnection_f35d25277cc50c27cf7b5d69181dd381'] = 'LIVE';
 $_MODULE['<{multisafepay}prestashop>tabs_9ead913c5b7c87efda39ca9640c46ae4'] = 'Ci sono %d errori';
