@@ -399,6 +399,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             case 'ing':
             case 'kbc':
             case 'paypal':
+            case 'santander':
                 // No additional data needed
                 $type = 'direct';
                 $gateway_info = array();
