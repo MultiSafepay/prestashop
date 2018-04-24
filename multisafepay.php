@@ -106,7 +106,8 @@ class Multisafepay extends PaymentModule
         array("code" => "dirdeb", "name" => "Direct Debit", 'config' => true),
         array("code" => "alipay", "name" => "AliPay", 'config' => true),
         array("code" => "connect", "name" => "MultiSafepay", 'config' => true),
-        array("code" => "amex", "name" => "American Express", 'config' => true)
+        array("code" => "amex", "name" => "American Express", 'config' => true),
+        array("code" => "trustly", "name" => "Trustly", 'config' => true),
     );
 
     public function __construct()
