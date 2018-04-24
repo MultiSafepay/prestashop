@@ -106,7 +106,8 @@ class Multisafepay extends PaymentModule
         array("code" => "dirdeb", "name" => "Direct Debit", 'config' => true),
         array("code" => "alipay", "name" => "AliPay", 'config' => true),
         array("code" => "connect", "name" => "MultiSafepay", 'config' => true),
-        array("code" => "amex", "name" => "American Express", 'config' => true)
+        array("code" => "amex", "name" => "American Express", 'config' => true),
+        array("code" => "afterpay", "name" => "AfterPay", 'config' => true),
     );
 
     public function __construct()
@@ -301,7 +302,7 @@ class Multisafepay extends PaymentModule
     {
         if ($params['newOrderStatus']->id == Configuration::get('PS_OS_SHIPPING')) {
             $order = new Order(Order::getOrderByCartId($params['cart']->id));
-            if ($order->payment == 'KLARNA' || $order->payment == 'PAYAFTER' || $order->payment == 'EINVOICE') {
+            if ($order->payment == 'KLARNA' || $order->payment == 'PAYAFTER' || $order->payment == 'EINVOICE' || $order->payment == 'AFTERPAY') {
                 $carrier = new Carrier((int) $params['cart']->id_carrier);
 
                 $multisafepay = new MspClient();
