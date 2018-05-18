@@ -203,6 +203,10 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                     $this->order_status = Configuration::get('MULTISAFEPAY_OS_CHARGEBACK');
                     break;
 
+                case 'shipped':
+                    $this->create_order = false;
+                    $this->order_status = Configuration::get('PS_OS_SHIPPING');
+                    break;
 
                 default:
                     $this->create_order = false;
