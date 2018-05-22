@@ -1,7 +1,7 @@
-<form action="{$action}" id="payment-form" method="POST" class="additional-information">
+<form action="{$action}" id="msp-ideal-form" method="POST" class="additional-information">
   <div class="form-group row">
-    <div class="col-md-6">
-      <select class="form-control form-control-select" name="issuer" id="issuers" required="required">
+    <div class="col-md-8">
+      <select class="form-control form-control-select" name="issuer" id="msp-ideal-issuer" required>
         <option value="">{$select_bank}</option>
         {foreach from=$issuers key=code item=issuer}
           <option value="{$issuer->code}">{$issuer->description}</option>
