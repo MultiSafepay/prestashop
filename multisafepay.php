@@ -108,6 +108,8 @@ class Multisafepay extends PaymentModule
         array("code" => "connect", "name" => "MultiSafepay", 'config' => true),
         array("code" => "amex", "name" => "American Express", 'config' => true),
         array("code" => "santander", "name" => "Santander Betaalplan", 'config' => true),
+        array("code" => "afterpay", "name" => "AfterPay", 'config' => true),
+        array("code" => "trustly", "name" => "Trustly", 'config' => true),
     );
 
     public function __construct()
@@ -311,6 +313,7 @@ class Multisafepay extends PaymentModule
             if ($order->payment == 'KLARNA' || 
                     $order->payment == 'PAYAFTER' || 
                     $order->payment == 'EINVOICE' ||
+                    $order->payment == 'AFTERPAY' ||
                     $order->payment == 'SANTANDER'
                 ) {
                 $carrier = new Carrier((int) $params['cart']->id_carrier);
