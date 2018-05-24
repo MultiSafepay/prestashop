@@ -107,6 +107,7 @@ class Multisafepay extends PaymentModule
         array("code" => "alipay", "name" => "AliPay", 'config' => true),
         array("code" => "connect", "name" => "MultiSafepay", 'config' => true),
         array("code" => "amex", "name" => "American Express", 'config' => true),
+        array("code" => "santander", "name" => "Santander Betaalplan", 'config' => true),
         array("code" => "afterpay", "name" => "AfterPay", 'config' => true),
         array("code" => "trustly", "name" => "Trustly", 'config' => true),
     );
@@ -279,6 +280,12 @@ class Multisafepay extends PaymentModule
                 Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_carrier'], 'on');
             }
         }
+
+        /*
+        * Initialize Santander Betaalplan minimum/maximum amounts
+        */
+        Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . 'santander' . '_MIN_AMOUNT', 250);
+        Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . 'santander' . '_MAX_AMOUNT', 1000);
     }
 
     public function uninstall()
@@ -303,7 +310,12 @@ class Multisafepay extends PaymentModule
     {
         if ($params['newOrderStatus']->id == Configuration::get('PS_OS_SHIPPING')) {
             $order = new Order(Order::getOrderByCartId($params['cart']->id));
-            if ($order->payment == 'KLARNA' || $order->payment == 'PAYAFTER' || $order->payment == 'EINVOICE' || $order->payment == 'AFTERPAY') {
+            if ($order->payment == 'KLARNA' || 
+                    $order->payment == 'PAYAFTER' || 
+                    $order->payment == 'EINVOICE' ||
+                    $order->payment == 'AFTERPAY' ||
+                    $order->payment == 'SANTANDER'
+                ) {
                 $carrier = new Carrier((int) $params['cart']->id_carrier);
 
                 $multisafepay = new MspClient();
