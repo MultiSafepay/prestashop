@@ -106,14 +106,17 @@ class Multisafepay extends PaymentModule
         array("code" => "dirdeb", "name" => "Direct Debit", 'config' => true),
         array("code" => "alipay", "name" => "AliPay", 'config' => true),
         array("code" => "connect", "name" => "MultiSafepay", 'config' => true),
-        array("code" => "amex", "name" => "American Express", 'config' => true)
+        array("code" => "amex", "name" => "American Express", 'config' => true),
+        array("code" => "santander", "name" => "Santander Betaalplan", 'config' => true),
+        array("code" => "afterpay", "name" => "AfterPay", 'config' => true),
+        array("code" => "trustly", "name" => "Trustly", 'config' => true),
     );
 
     public function __construct()
     {
         $this->name = 'multisafepay';
         $this->tab = 'payments_gateways';
-        $this->version = '4.1.0';
+        $this->version = '4.2.0';
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
         $this->author = 'MultiSafepay';
         $this->controllers = array('validation', 'payment');
@@ -277,6 +280,12 @@ class Multisafepay extends PaymentModule
                 Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_carrier'], 'on');
             }
         }
+
+        /*
+        * Initialize Santander Betaalplan minimum/maximum amounts
+        */
+        Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . 'santander' . '_MIN_AMOUNT', 250);
+        Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . 'santander' . '_MAX_AMOUNT', 1000);
     }
 
     public function uninstall()
@@ -301,7 +310,12 @@ class Multisafepay extends PaymentModule
     {
         if ($params['newOrderStatus']->id == Configuration::get('PS_OS_SHIPPING')) {
             $order = new Order(Order::getOrderByCartId($params['cart']->id));
-            if ($order->payment == 'KLARNA' || $order->payment == 'PAYAFTER' || $order->payment == 'EINVOICE') {
+            if ($order->payment == 'KLARNA' || 
+                    $order->payment == 'PAYAFTER' || 
+                    $order->payment == 'EINVOICE' ||
+                    $order->payment == 'AFTERPAY' ||
+                    $order->payment == 'SANTANDER'
+                ) {
                 $carrier = new Carrier((int) $params['cart']->id_carrier);
 
                 $multisafepay = new MspClient();

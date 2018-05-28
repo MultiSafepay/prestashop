@@ -129,7 +129,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             "plugin" => array(
                 "shop" => 'Prestashop',
                 "shop_version" => _PS_VERSION_,
-                "plugin_version" => ' - Plugin 4.1.0',
+                "plugin_version" => ' - Plugin 4.2.0',
                 "partner" => "MultiSafepay",
             ),
         );
@@ -399,6 +399,8 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             case 'ing':
             case 'kbc':
             case 'paypal':
+            case 'santander':
+            case 'trustly':
                 // No additional data needed
                 $type = 'direct';
                 $gateway_info = array();
