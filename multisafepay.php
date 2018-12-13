@@ -51,8 +51,6 @@ class Multisafepay extends PaymentModule
     public $carriers;
     public $groups;
 
-    public $multisafepay_js;
-    public $multisafepay_css;
     /*
      * This array contains all supported gifcards and is used to generate the configuration an paymentOptions
      */
@@ -152,12 +150,7 @@ class Multisafepay extends PaymentModule
             }
         }
 
-        /*
-            Define the location of the CSS and JS file
-        */
-        $protocol = Tools::getShopDomainSsl(true, true);
-        $this->multisafepay_js  = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/js/multisafepay.js';
-        $this->multisafepay_css = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/css/multisafepay.css';
+
 
         /*
          * Sort the giftcards based by provided sort order configuration value
@@ -310,8 +303,8 @@ class Multisafepay extends PaymentModule
     {
         if ($params['newOrderStatus']->id == Configuration::get('PS_OS_SHIPPING')) {
             $order = new Order(Order::getOrderByCartId($params['cart']->id));
-            if ($order->payment == 'KLARNA' || 
-                    $order->payment == 'PAYAFTER' || 
+            if ($order->payment == 'KLARNA' ||
+                    $order->payment == 'PAYAFTER' ||
                     $order->payment == 'EINVOICE' ||
                     $order->payment == 'AFTERPAY' ||
                     $order->payment == 'SANTANDER'
@@ -460,9 +453,7 @@ class Multisafepay extends PaymentModule
         $this->carriers   = Carrier::getCarriers($this->context->language->id, false, false, false, null, Carrier::ALL_CARRIERS);
         $this->countries  = Country::getCountries($this->context->language->id);
 
-        $protocol = Tools::getShopDomainSsl(true, true);
-        $multisafepay_js  = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/js/multisafepay.js';
-        $multisafepay_css = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/css/multisafepay.css';
+        $multisafepay_module_dir = $this->_path;
 
         if (!Tools::getValue('tab')) {
             $active_tab = 'main_configuration';
@@ -479,8 +470,7 @@ class Multisafepay extends PaymentModule
         $this->context->smarty->assign(array(
             'tabs'              => $this->getMultiSafepayTabs(),
             'active_tab'        => $active_tab,
-            'multisafepay_js'   => $multisafepay_js,
-            'multisafepay_css'  => $multisafepay_css,
+            'multisafepay_module_dir' => $multisafepay_module_dir,
             'errors'            => $postMessages['errors'],
             'warnings'          => $postMessages['warnings']
         ));
@@ -1129,9 +1119,11 @@ class Multisafepay extends PaymentModule
 
     protected function getPayafter()
     {
+        $multisafepay_module_dir = $this->_path;
+
         $this->context->smarty->assign([
             'action'            => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => 'payafter'), true),
-            'multisafepay_css'  => $this->multisafepay_css,
+            'multisafepay_module_dir'  => $multisafepay_module_dir,
 
             'label_birthday'    => $this->l('Birthday'),
             'label_phone'       => $this->l('Phone'),
@@ -1150,9 +1142,11 @@ class Multisafepay extends PaymentModule
 
     protected function getEinvoice()
     {
+        $multisafepay_module_dir = $this->_path;
+
         $this->context->smarty->assign([
             'action'            => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => 'einvoice'), true),
-            'multisafepay_css'  => $this->multisafepay_css,
+            'multisafepay_module_dir'  => $multisafepay_module_dir,
 
             'label_birthday'    => $this->l('Birthday'),
             'label_phone'       => $this->l('Phone'),
