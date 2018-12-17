@@ -135,7 +135,7 @@ class Multisafepay extends PaymentModule
          * Sort the gateways based by provided sort order configuration value
          */
         for ($i = 0; $i < count($this->gateways); $i ++) {
-            $this->gateways[$i]['sort'] = Configuration::get('MULTISAFEPAY_GATEWAY_' . $this->gateways[$i]['code'] . '_SORT');
+            $this->gateways[$i]['sort'] = (int) Configuration::get('MULTISAFEPAY_GATEWAY_' . $this->gateways[$i]['code'] . '_SORT');
         }
 
         usort($this->gateways, function($a, $b) {
@@ -156,7 +156,7 @@ class Multisafepay extends PaymentModule
          * Sort the giftcards based by provided sort order configuration value
          */
         for ($i = 0; $i < count($this->giftcards); $i ++) {
-            $this->giftcards[$i]['sort'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $this->giftcards[$i]['code'] . '_SORT');
+            $this->giftcards[$i]['sort'] = (int) Configuration::get('MULTISAFEPAY_GIFTCARD_' . $this->giftcards[$i]['code'] . '_SORT');
         }
 
         usort($this->giftcards, function($a, $b) {
