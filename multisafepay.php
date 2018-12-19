@@ -244,8 +244,8 @@ class Multisafepay extends PaymentModule
 
     protected function initializeConfig()
     {
-        $default_currency = $this->context->currency->id;
-        $default_country = $this->context->country->id;
+        $default_currency = Configuration::get('PS_CURRENCY_DEFAULT');
+        $default_country = Configuration::get('PS_COUNTRY_DEFAULT');
         $this->groups = Group::getGroups($this->context->language->id);
         $this->carriers = Carrier::getCarriers($this->context->language->id, false, false, false, null, Carrier::ALL_CARRIERS);
 
