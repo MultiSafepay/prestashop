@@ -322,18 +322,7 @@ class Multisafepay extends PaymentModule
                     "ship_date" => date('Y-m-d H:i:s'),
                     "reason" => 'Shipped'
                 );
-                $result = $multisafepay->orders->patch($ship_data, $endpoint);
-
-                if (!empty($result->success)) {
-                    $this->transaction = $multisafepay->orders->get($endpoint = 'orders', $params['cart']->id, $body = array(), $query_string = false);
-                    if ($this->transaction->payment_details->type == 'KLARNA') {
-                        $msg = new Message();
-                        $msg->message = 'https://online.klarna.com/invoices/' . $this->transaction->payment_details->external_transaction_id . '.pdf';
-                        $msg->id_order = $params['cart']->id;
-                        $msg->private = True;
-                        $msg->save();
-                    }
-                }
+                $multisafepay->orders->patch($ship_data, $endpoint);
             }
         }
     }
