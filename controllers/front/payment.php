@@ -281,7 +281,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 'description' => $product['description_short'],
                 'unit_price' => round($product['price'], 4),
                 'quantity' => $product['quantity'],
-                'merchant_item_id' => $product['id_product'],
+                'merchant_item_id' => "{$product['id_product']}-{$product['id_product_attribute']}",
                 'tax_table_selector' => $product['tax_name'],
                 'weight' => array('unit' => $product['weight'], 'value' => 'KG')
             );
