@@ -26,6 +26,7 @@ Paymentmethods:
 18. Giropay
 19. Mastercard
 20. Visa
+21. iDEAL QR
 
 * These Payment methods can be used when officially released by MultiSafepay.
 

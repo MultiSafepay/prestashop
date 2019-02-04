@@ -108,6 +108,7 @@ class Multisafepay extends PaymentModule
         array("code" => "santander", "name" => "Santander Betaalplan", 'config' => true),
         array("code" => "afterpay", "name" => "AfterPay", 'config' => true),
         array("code" => "trustly", "name" => "Trustly", 'config' => true),
+        array("code" => "idealqr", "name" => "iDEAL QR", 'config' => true),
     );
 
     public function __construct()
