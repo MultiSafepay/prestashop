@@ -140,7 +140,8 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                         $this->order_status = Configuration::get('PS_OS_ERROR');
                     }
 
-                    $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $this->transaction->payment_details->type, null, '', (int) $cart->id_currency, false, $customer->secure_key);
+                    $extra_properties = array('transaction_id' => $this->transaction->transaction_id);
+                    $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $this->transaction->payment_details->type, null, $extra_properties, (int) $cart->id_currency, false, $customer->secure_key);
                     $order = new Order(Order::getOrderByCartId((int) $cart_id));
                     if ($paid != $total){
                          $this->addMessage($order, $customer);
@@ -256,7 +257,8 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                         $this->order_status = Configuration::get('PS_OS_ERROR');
                     }
 
-                    $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $this->transaction->payment_details->type, null, '', (int) $cart->id_currency, false, $customer->secure_key);
+                    $extra_properties = array('transaction_id' => $this->transaction->transaction_id);
+                    $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $this->transaction->payment_details->type, null, $extra_properties, (int) $cart->id_currency, false, $customer->secure_key);
                     $order = new Order(Order::getOrderByCartId((int) $cart_id));
                     if ($paid != $total){
                          $this->addMessage($order, $customer);
