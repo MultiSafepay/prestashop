@@ -10,11 +10,11 @@ Paymentmethods:
 2. Klarna Invoice
 3. Dotpay
 4. EPS
-5. ING Home'Pay *
-6. Belfius *
-7. AliPay *
-8. KBC *
-9. TrustPay *
+5. ING Home'Pay
+6. Belfius
+7. AliPay
+8. KBC
+9. TrustPay
 10. PayPal
 11. Pay After Delivery
 12. Direct Debit
@@ -27,6 +27,12 @@ Paymentmethods:
 19. Mastercard
 20. Visa
 21. iDEAL QR
+22. Trustly
+23. E-invoice
+24. Paysafecard
+25. Santander Betaalplan
+
+
 
 * These Payment methods can be used when officially released by MultiSafepay.
 
