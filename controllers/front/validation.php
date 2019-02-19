@@ -44,6 +44,23 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
         $type = Tools::getValue('type');
         $this->lock_file = _PS_MODULE_DIR_ . 'multisafepay' . DIRECTORY_SEPARATOR . 'locks' . DIRECTORY_SEPARATOR . 'multisafepay_cart_' . $cart_id . '.lock';
         $tries = 1;
+
+
+        // if order exists but the payment is not processed by MultiSafepay
+        $order = new Order(Order::getOrderByCartId((int) $cart_id));
+        if ($order->module && $order->module != 'multisafepay') {
+            exit("Not a MultiSafepay order");
+        }
+
+        $cart = new Cart($cart_id);
+        $customer = new Customer($cart->id_customer);
+        if (!Validate::isLoadedObject($customer)) {
+            Tools::redirect('index.php?controller=order&step=1');
+        }
+        if ($cart->id_customer == 0 || $cart->id_address_delivery == 0 || $cart->id_address_invoice == 0 || !$this->module->active) {
+            Tools::redirect('index.php?controller=order&step=1');
+        }
+
         while ($tries < $this->timeToWait) {
             if (file_exists($this->lock_file)) {
                 sleep(1);
@@ -81,23 +98,12 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
         }
 
 
-        $cart = new Cart($cart_id);
-        $customer = new Customer($cart->id_customer);
-        if (!Validate::isLoadedObject($customer)) {
-            Tools::redirect('index.php?controller=order&step=1');
-        }
-        if ($cart->id_customer == 0 || $cart->id_address_delivery == 0 || $cart->id_address_invoice == 0 || !$this->module->active) {
-            Tools::redirect('index.php?controller=order&step=1');
-        }
-
 
         $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
         $paid  = (float)($this->transaction->amount / 100);
 
 
         if ($type == "redirect") {
-
-            $order = new Order(Order::getOrderByCartId((int) $cart_id));
 
             if (isset($order->id_cart) && $order->id_cart > 0) {
                 $url = "index.php?controller=order-confirmation"
@@ -215,8 +221,6 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                     break;
             }
 
-
-            $order = new Order(Order::getOrderByCartId((int) $cart_id));
             if (isset($order->id_cart) && $order->id_cart > 0) {
                 if ($paid == $total){
 
