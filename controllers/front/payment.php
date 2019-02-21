@@ -353,15 +353,20 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 
     private function parseAddress($address1, $address2 = '')
     {
-        $adress = trim ($address1 . ' ' . $address2);
+        $address1 = trim ($address1);
+        $address2 = trim ($address2);
+        $adress   = trim ($address1 . ' ' . $address2);
 
-        $aMatch = array();
-        $pattern        = '#^([\w[:punct:] ]+) ([0-9]{1,5})\s*(.*)$#';
-        $matchResult    = preg_match($pattern, $adress, $aMatch);
+        $aMatch   = array();
+        $pattern  = '#^(.*?)([0-9]{1,5})([\w[:punct:]\-/]*)$#';
+        $matchResult = preg_match($pattern, $adress, $aMatch);
 
-        $street         = (isset($aMatch[1])) ? $aMatch[1] : '';
-        $apartment      = (isset($aMatch[2])) ? $aMatch[2] : '' ;
-        $apartment     .= (isset($aMatch[3])) ? $aMatch[3] : '';
+        $street      = (isset($aMatch[1])) ? $aMatch[1] : '';
+        $apartment   = (isset($aMatch[2])) ? $aMatch[2] : '' ;
+        $apartment  .= (isset($aMatch[3]) && $aMatch[3] != $aMatch[2]) ? $aMatch[3] : '';
+
+        $street    = trim ($street);
+        $apartment = trim ($apartment);
 
         return array($street, $apartment);
     }
