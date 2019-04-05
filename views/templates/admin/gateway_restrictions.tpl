@@ -113,10 +113,10 @@
                                 <td class="left">{$carrier.name}</td>
                                 {foreach from=$gateways key=sort item=gateway}	
                                     {if $gateway.active == 1}
-                                        {if isset ($gateway.carrier[$carrier.id_carrier])}
-                                            <td><input type="checkbox" name="MULTISAFEPAY_GATEWAY_{$gateway.code}_CARRIER_{$carrier.id_carrier}" checked/></td>
+                                        {if isset ($gateway.carrier[$carrier.id_reference])}
+                                            <td><input type="checkbox" name="MULTISAFEPAY_GATEWAY_{$gateway.code}_CARRIER_{$carrier.id_reference}" checked/></td>
                                         {else}
-                                            <td><input type="checkbox" name="MULTISAFEPAY_GATEWAY_{$gateway.code}_CARRIER_{$carrier.id_carrier}" /></td>
+                                            <td><input type="checkbox" name="MULTISAFEPAY_GATEWAY_{$gateway.code}_CARRIER_{$carrier.id_reference}" /></td>
                                         {/if}
                                     {/if}
                                 {/foreach}
