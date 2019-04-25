@@ -1,5 +1,5 @@
 ## 4.3.0
-Release date: April 8th, 2019
+Release date: April 25th, 2019
 
 ### Added
 + PLGPRSS-274: Add iDEAL QR payment method
