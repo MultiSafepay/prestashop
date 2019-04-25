@@ -51,8 +51,6 @@ class Multisafepay extends PaymentModule
     public $carriers;
     public $groups;
 
-    public $multisafepay_js;
-    public $multisafepay_css;
     /*
      * This array contains all supported gifcards and is used to generate the configuration an paymentOptions
      */
@@ -99,7 +97,7 @@ class Multisafepay extends PaymentModule
         array("code" => "paypal", "name" => "PayPal", 'config' => true),
         array("code" => "giropay", "name" => "Giropay", 'config' => true),
         array("code" => "directbank", "name" => "Sofort", 'config' => true),
-        array("code" => "inghome", "name" => "ING Homepay", 'config' => true),
+        array("code" => "inghome", "name" => "ING Home'Pay", 'config' => true),
         array("code" => "belfius", "name" => "Belfius", 'config' => true),
         array("code" => "trustpay", "name" => "TrustPay", 'config' => true),
         array("code" => "kbc", "name" => "KBC", 'config' => true),
@@ -110,13 +108,14 @@ class Multisafepay extends PaymentModule
         array("code" => "santander", "name" => "Santander Betaalplan", 'config' => true),
         array("code" => "afterpay", "name" => "AfterPay", 'config' => true),
         array("code" => "trustly", "name" => "Trustly", 'config' => true),
+        array("code" => "idealqr", "name" => "iDEAL QR", 'config' => true),
     );
 
     public function __construct()
     {
         $this->name = 'multisafepay';
         $this->tab = 'payments_gateways';
-        $this->version = '4.2.0';
+        $this->version = '4.3.0';
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
         $this->author = 'MultiSafepay';
         $this->controllers = array('validation', 'payment');
@@ -137,7 +136,7 @@ class Multisafepay extends PaymentModule
          * Sort the gateways based by provided sort order configuration value
          */
         for ($i = 0; $i < count($this->gateways); $i ++) {
-            $this->gateways[$i]['sort'] = Configuration::get('MULTISAFEPAY_GATEWAY_' . $this->gateways[$i]['code'] . '_SORT');
+            $this->gateways[$i]['sort'] = (int) Configuration::get('MULTISAFEPAY_GATEWAY_' . $this->gateways[$i]['code'] . '_SORT');
         }
 
         usort($this->gateways, function($a, $b) {
@@ -152,18 +151,13 @@ class Multisafepay extends PaymentModule
             }
         }
 
-        /*
-            Define the location of the CSS and JS file
-        */
-        $protocol = Tools::getShopDomainSsl(true, true);
-        $this->multisafepay_js  = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/js/multisafepay.js';
-        $this->multisafepay_css = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/css/multisafepay.css';
+
 
         /*
          * Sort the giftcards based by provided sort order configuration value
          */
         for ($i = 0; $i < count($this->giftcards); $i ++) {
-            $this->giftcards[$i]['sort'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $this->giftcards[$i]['code'] . '_SORT');
+            $this->giftcards[$i]['sort'] = (int) Configuration::get('MULTISAFEPAY_GIFTCARD_' . $this->giftcards[$i]['code'] . '_SORT');
         }
 
         usort($this->giftcards, function($a, $b) {
@@ -251,8 +245,8 @@ class Multisafepay extends PaymentModule
 
     protected function initializeConfig()
     {
-        $default_currency = $this->context->currency->id;
-        $default_country = $this->context->country->id;
+        $default_currency = Configuration::get('PS_CURRENCY_DEFAULT');
+        $default_country = Configuration::get('PS_COUNTRY_DEFAULT');
         $this->groups = Group::getGroups($this->context->language->id);
         $this->carriers = Carrier::getCarriers($this->context->language->id, false, false, false, null, Carrier::ALL_CARRIERS);
 
@@ -265,7 +259,7 @@ class Multisafepay extends PaymentModule
             }
 
             foreach ($this->carriers as $carrier) {
-                Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_carrier'], 'on');
+                Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_reference'], 'on');
             }
         }
         foreach ($this->gateways as $gateway) {
@@ -277,7 +271,7 @@ class Multisafepay extends PaymentModule
             }
 
             foreach ($this->carriers as $carrier) {
-                Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_carrier'], 'on');
+                Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_reference'], 'on');
             }
         }
 
@@ -310,8 +304,8 @@ class Multisafepay extends PaymentModule
     {
         if ($params['newOrderStatus']->id == Configuration::get('PS_OS_SHIPPING')) {
             $order = new Order(Order::getOrderByCartId($params['cart']->id));
-            if ($order->payment == 'KLARNA' || 
-                    $order->payment == 'PAYAFTER' || 
+            if ($order->payment == 'KLARNA' ||
+                    $order->payment == 'PAYAFTER' ||
                     $order->payment == 'EINVOICE' ||
                     $order->payment == 'AFTERPAY' ||
                     $order->payment == 'SANTANDER'
@@ -329,18 +323,7 @@ class Multisafepay extends PaymentModule
                     "ship_date" => date('Y-m-d H:i:s'),
                     "reason" => 'Shipped'
                 );
-                $result = $multisafepay->orders->patch($ship_data, $endpoint);
-
-                if (!empty($result->success)) {
-                    $this->transaction = $multisafepay->orders->get($endpoint = 'orders', $params['cart']->id, $body = array(), $query_string = false);
-                    if ($this->transaction->payment_details->type == 'KLARNA') {
-                        $msg = new Message();
-                        $msg->message = 'https://online.klarna.com/invoices/' . $this->transaction->payment_details->external_transaction_id . '.pdf';
-                        $msg->id_order = $params['cart']->id;
-                        $msg->private = True;
-                        $msg->save();
-                    }
-                }
+                $multisafepay->orders->patch($ship_data, $endpoint);
             }
         }
     }
@@ -394,7 +377,7 @@ class Multisafepay extends PaymentModule
                     Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_' . $group['id_group'], Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_' . $group['id_group']));
                 }
                 foreach ($this->carriers as $carrier) {
-                    Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_carrier'], Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_carrier']));
+                    Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_reference'], Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_reference']));
                 }
                 foreach ($this->countries as $country) {
                     Configuration::updateValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_' . $country['id_country'], Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_' . $country['id_country']));
@@ -413,7 +396,7 @@ class Multisafepay extends PaymentModule
                     Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $group['id_group'], Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $group['id_group']));
                 }
                 foreach ($this->carriers as $carrier) {
-                    Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_carrier'], Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_carrier']));
+                    Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_reference'], Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_reference']));
                 }
                 foreach ($this->countries as $country) {
                     Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_' . $country['id_country'], Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_' . $country['id_country']));
@@ -460,9 +443,7 @@ class Multisafepay extends PaymentModule
         $this->carriers   = Carrier::getCarriers($this->context->language->id, false, false, false, null, Carrier::ALL_CARRIERS);
         $this->countries  = Country::getCountries($this->context->language->id);
 
-        $protocol = Tools::getShopDomainSsl(true, true);
-        $multisafepay_js  = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/js/multisafepay.js';
-        $multisafepay_css = $protocol . __PS_BASE_URI__ . 'modules/' . $this->name . '/views/css/multisafepay.css';
+        $multisafepay_module_dir = $this->_path;
 
         if (!Tools::getValue('tab')) {
             $active_tab = 'main_configuration';
@@ -479,8 +460,7 @@ class Multisafepay extends PaymentModule
         $this->context->smarty->assign(array(
             'tabs'              => $this->getMultiSafepayTabs(),
             'active_tab'        => $active_tab,
-            'multisafepay_js'   => $multisafepay_js,
-            'multisafepay_css'  => $multisafepay_css,
+            'multisafepay_module_dir' => $multisafepay_module_dir,
             'errors'            => $postMessages['errors'],
             'warnings'          => $postMessages['warnings']
         ));
@@ -553,8 +533,8 @@ class Multisafepay extends PaymentModule
             }
 
             foreach ($this->carriers as $carrier) {
-                if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_carrier']) == 'on') {
-                    $this->gateways[$key]['carrier'][$carrier['id_carrier']] = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_carrier']);
+                if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_reference']) == 'on') {
+                    $this->gateways[$key]['carrier'][$carrier['id_reference']] = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_' . $carrier['id_reference']);
                 }
             }
 
@@ -609,8 +589,8 @@ class Multisafepay extends PaymentModule
             }
 
             foreach ($this->carriers as $carrier) {
-                if (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_carrier']) == 'on') {
-                    $this->giftcards[$key]['carrier'][$carrier['id_carrier']] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_carrier']);
+                if (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_reference']) == 'on') {
+                    $this->giftcards[$key]['carrier'][$carrier['id_reference']] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrier['id_reference']);
                 }
             }
 
@@ -891,15 +871,17 @@ class Multisafepay extends PaymentModule
                 $billing        = new Address($this->context->cart->id_address_invoice);
                 $id_country     = $billing->id_country;
                 $id_currency    = $params['cart']->id_currency;
-                $id_carrier     = $params['cart']->id_carrier;
+                $carrier        = new Carrier((int) $params['cart']->id_carrier);
                 $id_shop_group  = $params['cart']->id_shop_group;
                 $amount         = $params['cart']->getOrderTotal(true, Cart::BOTH);
                 $isVirtualCart  = $params['cart']->isVirtualCart();
 
+                $carrierIdReference = $carrier->id_reference;
+
                 if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CURRENCY_' . $id_currency)   == 'on' &&
                     Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_'    . $id_shop_group) == "on" &&
                     Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_'  . $id_country)    == 'on' &&
-                   (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_'  . $id_carrier)    == 'on' || $isVirtualCart) ) {
+                   (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_'  . $carrierIdReference)    == 'on' || $isVirtualCart) ) {
                     $active = true;
                 }
 
@@ -1002,16 +984,18 @@ class Multisafepay extends PaymentModule
                 $billing = new Address($this->context->cart->id_address_invoice);
                 $id_country     = $billing->id_country;
                 $id_currency    = $params['cart']->id_currency;
-                $id_carrier     = $params['cart']->id_carrier;
+                $carrier        = new Carrier((int) $params['cart']->id_carrier);
                 $id_shop_group  = $params['cart']->id_shop_group;
                 $amount         = $params['cart']->getOrderTotal(true, Cart::BOTH);
                 $isVirtualCart  = $params['cart']->isVirtualCart();
+
+                $carrierIdReference = $carrier->id_reference;
 
 
                 if (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CURRENCY_' . $id_currency) == 'on' &&
                     Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_'    . $id_shop_group) == "on" &&
                     Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_' . $id_country) == 'on' &&
-                   (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $id_carrier) == 'on' || $isVirtualCart) ) {
+                   (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrierIdReference) == 'on' || $isVirtualCart) ) {
                     $active = true;
                 }
 
@@ -1129,9 +1113,11 @@ class Multisafepay extends PaymentModule
 
     protected function getPayafter()
     {
+        $multisafepay_module_dir = $this->_path;
+
         $this->context->smarty->assign([
             'action'            => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => 'payafter'), true),
-            'multisafepay_css'  => $this->multisafepay_css,
+            'multisafepay_module_dir'  => $multisafepay_module_dir,
 
             'label_birthday'    => $this->l('Birthday'),
             'label_phone'       => $this->l('Phone'),
@@ -1150,9 +1136,11 @@ class Multisafepay extends PaymentModule
 
     protected function getEinvoice()
     {
+        $multisafepay_module_dir = $this->_path;
+
         $this->context->smarty->assign([
             'action'            => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => 'einvoice'), true),
-            'multisafepay_css'  => $this->multisafepay_css,
+            'multisafepay_module_dir'  => $multisafepay_module_dir,
 
             'label_birthday'    => $this->l('Birthday'),
             'label_phone'       => $this->l('Phone'),

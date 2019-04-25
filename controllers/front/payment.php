@@ -33,9 +33,6 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 
     public $ssl = true;
     public $display_column_left = false;
-    public $shopping_cart = array();
-    public $checkout_options = array();
-    public $items = '';
 
     public function postProcess()
     {
@@ -67,10 +64,10 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         } else {
             $forwarded_ip = '';
         }
-        $this->getCart();
 
-        list ($street_billing,  $house_number_billing)  = $this->parseAddress($billing->address1,  $billing->address2);
-        list ($street_shipping, $house_number_shipping) = $this->parseAddress($shipping->address1, $shipping->address2);
+        list ($items, $shopping_cart, $checkout_options) = $this->getShoppingCart();
+        list ($street_billing,  $house_number_billing)   = $this->parseAddress($billing->address1,  $billing->address2);
+        list ($street_shipping, $house_number_shipping)  = $this->parseAddress($shipping->address1, $shipping->address2);
 
         list ($type, $gateway_info) = $this->getTypeAndGatewayInfo($customer);
 
@@ -84,7 +81,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             "var2" => "",
             "var3" => "",
             "manual" => "false",
-            "items" => $this->items,
+            "items" => $items,
             "gateway" => Tools::getValue('gateway'),
             "seconds_active" => $this->getSecondsActive(),
             "payment_options" => array(
@@ -123,13 +120,13 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 "phone" => $shipping->phone,
                 "email" => $customer->email,
             ),
-            "shopping_cart" => $this->shopping_cart,
-            "checkout_options" => $this->checkout_options,
+            "shopping_cart" => $shopping_cart,
+            "checkout_options" => $checkout_options,
             "gateway_info" => $gateway_info,
             "plugin" => array(
                 "shop" => 'Prestashop',
                 "shop_version" => _PS_VERSION_,
-                "plugin_version" => ' - Plugin 4.2.0',
+                "plugin_version" => ' - Plugin 4.3.0',
                 "partner" => "MultiSafepay",
             ),
         );
@@ -254,44 +251,51 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
     }
 
 
-    private function getCart()
+    private function getShoppingCart()
     {
         $cart = $this->context->cart;
         $total_data = $cart->getSummaryDetails();
 
-        $this->shopping_cart = array();
-        $this->checkout_options = array();
-        $this->checkout_options['tax_tables']['default'] = array('shipping_taxed' => 'true', 'rate' => '0.21');
-        $this->checkout_options['tax_tables']['alternate'][] = '';
+        $shopping_cart = array();
+        $checkout_options = array();
+        $checkout_options['tax_tables']['default'] = array('shipping_taxed' => 'true', 'rate' => '0.21');
+        $checkout_options['tax_tables']['alternate'][] = '';
 
         // Products
         $products = $cart->getProducts();
         $items = "<ul>\n";
 
         foreach ($products as $product) {
-            $items .= "<li>";
-            $items .= $product['cart_quantity'] . ' x : ' . $product['name'];
-            if (!empty($product['attributes_small'])) {
-                $items .= '(' . $product['attributes_small'] . ')';
-            }
-            $items .= "</li>\n";
 
-            $this->shopping_cart['items'][] = array(
-                'name' => $product['name'],
-                'description' => $product['description_short'],
-                'unit_price' => round($product['price'], 4),
-                'quantity' => $product['quantity'],
-                'merchant_item_id' => $product['id_product'],
+            $product_name     = $product['name'];
+            $merchant_item_id = $product['id_product'];
+
+            if (!empty($product['attributes_small'])) {
+                $product_name     .= ' ( ' . $product['attributes_small'] . ' )';
+                $merchant_item_id .= '-'. $product['id_product_attribute'];
+            }
+
+            $items .= "<li>" . $product['cart_quantity'] . ' x : ' . $product_name . "</li>\n";
+
+            $shopping_cart['items'][] = array(
+                'name'               => $product_name,
+                'description'        => $product['description_short'],
+                'unit_price'         => round($product['price'], 4),
+                'quantity'           => $product['quantity'],
+                'merchant_item_id'   => $merchant_item_id,
                 'tax_table_selector' => $product['tax_name'],
-                'weight' => array('unit' => $product['weight'], 'value' => 'KG')
+                'weight' => array('unit'  => $product['weight'],
+                                  'value' => 'KG')
             );
-            array_push($this->checkout_options['tax_tables']['alternate'], array('name' => $product['tax_name'], 'rules' => array(array('rate' => $product['rate'] / 100))));
+            array_push($checkout_options['tax_tables']['alternate'], array('name' => $product['tax_name'], 'rules' => array(array('rate' => $product['rate'] / 100))));
         }
+        $items .= "</ul>\n";
+
 
         // Fee
         if (isset($cart->feeamount) && $cart->feeamount > 0) {
 
-            $this->shopping_cart['items'][] = array(
+            $shopping_cart['items'][] = array(
                 'name' => 'Fee',
                 'description' => $this->module->l('Fee', 'payment'),
                 'unit_price' => $cart->feeamount,
@@ -300,12 +304,12 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 'tax_table_selector' => 'Fee',
                 'weight' => array('unit' => 0, 'value' => 'KG')
             );
-            array_push($this->checkout_options['tax_tables']['alternate'], array('name' => 'Fee', 'rules' => array(array('rate' => '0.00'))));
+            array_push($checkout_options['tax_tables']['alternate'], array('name' => 'Fee', 'rules' => array(array('rate' => '0.00'))));
         }
 
         // Discount
         if ($total_data['total_discounts'] > 0) {
-            $this->shopping_cart['items'][] = array(
+            $shopping_cart['items'][] = array(
                 'name' => 'Discount',
                 'description' => $this->module->l('Discount', 'payment'),
                 'unit_price' => round(-$total_data['total_discounts'], 4),
@@ -314,12 +318,12 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 'tax_table_selector' => 'Discount',
                 'weight' => array('unit' => 0, 'value' => 'KG')
             );
-            array_push($this->checkout_options['tax_tables']['alternate'], array('name' => 'Discount', 'rules' => array(array('rate' => '0.00'))));
+            array_push($checkout_options['tax_tables']['alternate'], array('name' => 'Discount', 'rules' => array(array('rate' => '0.00'))));
         }
 
         // Wrapping
         if ($total_data['total_wrapping'] > 0) {
-            $this->shopping_cart['items'][] = array(
+            $shopping_cart['items'][] = array(
                 'name' => 'Wrapping',
                 'description' => $this->module->l('Wrapping', 'payment'),
                 'unit_price' => round($total_data['total_wrapping_tax_exc'], 4),
@@ -329,12 +333,12 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 'weight' => array('unit' => 0, 'value' => 'KG')
             );
             $wrapping_tax_percentage = round(($total_data['total_wrapping'] - $total_data['total_wrapping_tax_exc']) * ( $total_data['total_wrapping_tax_exc'] / 100), 2);
-            array_push($this->checkout_options['tax_tables']['alternate'], array('name' => 'Wrapping', 'rules' => array(array('rate' => $wrapping_tax_percentage))));
+            array_push($checkout_options['tax_tables']['alternate'], array('name' => 'Wrapping', 'rules' => array(array('rate' => $wrapping_tax_percentage))));
         }
 
         // Shipping
         if ($total_data['total_shipping'] > 0) {
-            $this->shopping_cart['items'][] = array(
+            $shopping_cart['items'][] = array(
                 'name' => 'Shipping',
                 'description' => $this->module->l('Shipping', 'payment'),
                 'unit_price' => round($total_data['total_shipping_tax_exc'], 4),
@@ -344,24 +348,28 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 'weight' => array('unit' => 0, 'value' => 'KG')
             );
             $shipping_tax_percentage = round(($total_data['total_shipping'] - $total_data['total_shipping_tax_exc']) / ( $total_data['total_shipping_tax_exc']), 2);
-            array_push($this->checkout_options['tax_tables']['alternate'], array('name' => 'Shipping', 'rules' => array(array('rate' => $shipping_tax_percentage))));
+            array_push($checkout_options['tax_tables']['alternate'], array('name' => 'Shipping', 'rules' => array(array('rate' => $shipping_tax_percentage))));
         }
 
-        $items .= "</ul>\n";
-        $this->items = $items;
+        return array ($items, $shopping_cart, $checkout_options);
     }
 
     private function parseAddress($address1, $address2 = '')
     {
-        $adress = trim ($address1 . ' ' . $address2);
+        $address1 = trim ($address1);
+        $address2 = trim ($address2);
+        $adress   = trim ($address1 . ' ' . $address2);
 
-        $aMatch = array();
-        $pattern        = '#^([\w[:punct:] ]+) ([0-9]{1,5})\s*(.*)$#';
-        $matchResult    = preg_match($pattern, $adress, $aMatch);
+        $aMatch   = array();
+        $pattern  = '#^(.*?)([0-9]{1,5})([\w[:punct:]\-/]*)$#';
+        $matchResult = preg_match($pattern, $adress, $aMatch);
 
-        $street         = (isset($aMatch[1])) ? $aMatch[1] : '';
-        $apartment      = (isset($aMatch[2])) ? $aMatch[2] : '' ;
-        $apartment     .= (isset($aMatch[3])) ? $aMatch[3] : '';
+        $street      = (isset($aMatch[1])) ? $aMatch[1] : '';
+        $apartment   = (isset($aMatch[2])) ? $aMatch[2] : '' ;
+        $apartment  .= (isset($aMatch[3]) && $aMatch[3] != $aMatch[2]) ? $aMatch[3] : '';
+
+        $street    = trim ($street);
+        $apartment = trim ($apartment);
 
         return array($street, $apartment);
     }

@@ -1,6 +1,6 @@
 <form action="{$action}" id="msp-payafter-form" method="POST" class="additional-information">
-<link href="{$multisafepay_css|escape:'htmlall':'UTF-8'}" rel="stylesheet" type="text/css">
-
+    <link href="{$multisafepay_module_dir|escape:'htmlall':'UTF-8'}views/css/multisafepay.css" rel="stylesheet" type="text/css">
+ 
   <div class="form-group row">
     <div class="col-md-8">
     
