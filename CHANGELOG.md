@@ -1,3 +1,9 @@
+## 4.3.1
+Release date: May 15th, 2019
+
+### Fixed
++ PLGPRSS-372: Prevent creation of duplicate orders
+
 ## 4.3.0
 Release date: April 25th, 2019
 
