@@ -101,7 +101,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
 
         $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
         $paid  = (float)($this->transaction->amount / 100);
-
+        $order = new Order(Order::getOrderByCartId((int) $cart_id));
 
         if ($type == "redirect") {
 
