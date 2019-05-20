@@ -5,6 +5,7 @@ $_MODULE = array();
 $_MODULE['<{multisafepay}prestashop>multisafepay_ff69caa9c517aca3c35e3ea1441e5314'] = 'MultiSafepay';
 $_MODULE['<{multisafepay}prestashop>multisafepay_4929480719bb0d43317dc6f11c3923d5'] = 'Accepteer betalingen via de beveiligde betaalomgeving van MultiSafepay';
 $_MODULE['<{multisafepay}prestashop>multisafepay_a02758d758e8bec77a33d7f392eb3f8a'] = 'De valuta is nog niet ingevuld voor deze module.';
+$_MODULE['<{multisafepay}prestashop>multisafepay_68d049d3beb65313c2830dac66054856'] = 'Weet u zeker dat u de volgende credit card wil verwijderen ';
 $_MODULE['<{multisafepay}prestashop>multisafepay_c888438d14855d7d96a2724ee9c306bd'] = 'Gegevens opgeslagen';
 $_MODULE['<{multisafepay}prestashop>multisafepay_10c9e86b7fcc69507ef0cfcbe94b0566'] = 'Gegevens betaalmethodes opgeslagen';
 $_MODULE['<{multisafepay}prestashop>multisafepay_19bb61d9ee1c706384e45178c564d28f'] = 'Gegevens Cadeaukaarten opgeslagen';
@@ -40,6 +41,8 @@ $_MODULE['<{multisafepay}prestashop>multisafepay_8819c44e0c4c2f8e4a78d88f8f98de2
 $_MODULE['<{multisafepay}prestashop>multisafepay_4c3db5d1b22825569c16c2eea8485a99'] = 'Indien geactiveerd, zullen alle API-verzoeken worden opgeslagen in de modules/multisafepay/logs folder';
 $_MODULE['<{multisafepay}prestashop>multisafepay_521c36a31c2762741cf0f8890cbe05e3'] = 'Aan';
 $_MODULE['<{multisafepay}prestashop>multisafepay_d15305d7a4e34e02489c74a5ef542f36'] = 'Uit';
+$_MODULE['<{multisafepay}prestashop>multisafepay_a2c862369354217a3423216950631e95'] = 'Tokenization inschakelen';
+$_MODULE['<{multisafepay}prestashop>multisafepay_d255c34ba56fd60f427a3cc8bef0bc84'] = 'Tokenization functionaliteit inschakelen';
 $_MODULE['<{multisafepay}prestashop>multisafepay_b78a3223503896721cca1303f776159b'] = 'Titel';
 $_MODULE['<{multisafepay}prestashop>multisafepay_c20cc8f5bb7d26404f80b1c990c8a7fd'] = 'Sorteer volgorde';
 $_MODULE['<{multisafepay}prestashop>multisafepay_b16854ceee6fb9499c2ad3aac40d539e'] = 'Minimaal orderbedrag';
@@ -48,6 +51,9 @@ $_MODULE['<{multisafepay}prestashop>multisafepay_5c5c91698f920e53f4f79cf08b519cc
 $_MODULE['<{multisafepay}prestashop>multisafepay_ccd1066343c95877b75b79d47c36bebe'] = 'Configuratie';
 $_MODULE['<{multisafepay}prestashop>multisafepay_2d72787c1474c7afe4c230641a0ceb2b'] = 'Is niet geactiveerd binnen het MultiSafepay account';
 $_MODULE['<{multisafepay}prestashop>multisafepay_48fa0f621f79f451e58f200957da5b52'] = 'Kies uw bank';
+$_MODULE['<{multisafepay}prestashop>multisafepay_c5ddb2feb2f243f7784339a324e413f3'] = 'Creditcardgegevens opslaan voor een volgende aankoop';
+$_MODULE['<{multisafepay}prestashop>multisafepay_323c2c0aabafe47d25fa61e6bb2a2453'] = 'Specificeer een naam voor de credit card';
+$_MODULE['<{multisafepay}prestashop>multisafepay_780bf8bf9f34862e29ab4a975a9aec63'] = 'Kies uw creditcard';
 $_MODULE['<{multisafepay}prestashop>multisafepay_aac772216aecbeca0e86d06671fe985a'] = 'Geboortedatum';
 $_MODULE['<{multisafepay}prestashop>multisafepay_bcc254b55c4a1babdf1dcb82c207506b'] = 'Telefoonnummer';
 $_MODULE['<{multisafepay}prestashop>multisafepay_7ec35321dd6ed2f0c30fccee83d15a2a'] = 'Bank rekening';

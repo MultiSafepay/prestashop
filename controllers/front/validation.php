@@ -276,6 +276,9 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
         }
 
         $this->unlock();
+        if (Configuration::get('MULTISAFEPAY_ENABLE_TOKEN')) {
+            $this->updateTokenization();
+        }
         echo 'OK';
         exit;
     }
@@ -321,5 +324,24 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
     {
         if (file_exists($this->lock_file))
             unlink($this->lock_file);
+    }
+
+
+    private function updateTokenization()
+    {
+        if (isset($this->transaction->payment_details->type)
+        && isset($this->transaction->payment_details->last4)
+        && isset($this->transaction->payment_details->card_expiry_date)) {
+            Db::getInstance()->update(
+                'multisafepay_tokenization',
+                array(
+                    'recurring_id' => PhpEncryptionCore::encrypt($this->transaction->payment_details->recurring_id),
+                    'cc_type' => $this->transaction->payment_details->type,
+                    'cc_last4' => $this->transaction->payment_details->last4,
+                    'cc_expiry_date' => $this->transaction->payment_details->card_expiry_date,
+                ),
+                'order_id = ' . pSQL(Tools::getValue('transactionid'))
+            );
+        }
     }
 }

@@ -232,6 +232,7 @@ class Multisafepay extends PaymentModule
             }
         }
         $this->initializeConfig();
+        $this->addTokenizationTable();
         return true;
     }
 
@@ -239,6 +240,7 @@ class Multisafepay extends PaymentModule
     public function hookActionFrontControllerSetMedia()
     {
         $this->context->controller->addJS($this->_path . 'views/js/multisafepay_front.js');
+        Media::addJsDefL('confirm_token_deletion', $this->l('Are you sure you want to delete '));
     }
 
 
@@ -296,6 +298,7 @@ class Multisafepay extends PaymentModule
         Configuration::deleteByName('MULTISAFEPAY_ENVIRONMENT');
         Configuration::deleteByName('MULTISAFEPAY_TIME_ACTIVE');
         Configuration::deleteByName('MULTISAFEPAY_TIME_UNIT');
+        Configuration::deleteByName('MULTISAFEPAY_ENABLE_TOKEN');
 
         return parent::uninstall();
     }
@@ -340,6 +343,7 @@ class Multisafepay extends PaymentModule
             Configuration::updateValue('MULTISAFEPAY_ENVIRONMENT', Tools::getValue('MULTISAFEPAY_ENVIRONMENT'));
             Configuration::updateValue('MULTISAFEPAY_TIME_ACTIVE', Tools::getValue('MULTISAFEPAY_TIME_ACTIVE'));
             Configuration::updateValue('MULTISAFEPAY_TIME_UNIT', Tools::getValue('MULTISAFEPAY_TIME_UNIT'));
+            Configuration::updateValue('MULTISAFEPAY_ENABLE_TOKEN', Tools::getValue('MULTISAFEPAY_ENABLE_TOKEN'));
             $this->context->smarty->assign('configuration_settings_saved', $this->l('Settings updated'));
             return;
         }
@@ -636,7 +640,8 @@ class Multisafepay extends PaymentModule
             'MULTISAFEPAY_DEBUG' => Tools::getValue('MULTISAFEPAY_DEBUG', Configuration::get('MULTISAFEPAY_DEBUG')),
             'MULTISAFEPAY_ENVIRONMENT' => Tools::getValue('MULTISAFEPAY_ENVIRONMENT', Configuration::get('MULTISAFEPAY_ENVIRONMENT')),
             'MULTISAFEPAY_TIME_ACTIVE' => Tools::getValue('MULTISAFEPAY_TIME_ACTIVE', Configuration::get('MULTISAFEPAY_TIME_ACTIVE')),
-            'MULTISAFEPAY_TIME_UNIT' => Tools::getValue('MULTISAFEPAY_TIME_UNIT', Configuration::get('MULTISAFEPAY_TIME_UNIT'))
+            'MULTISAFEPAY_TIME_UNIT' => Tools::getValue('MULTISAFEPAY_TIME_UNIT', Configuration::get('MULTISAFEPAY_TIME_UNIT')),
+            'MULTISAFEPAY_ENABLE_TOKEN' => Tools::getValue('MULTISAFEPAY_ENABLE_TOKEN', Configuration::get('MULTISAFEPAY_ENABLE_TOKEN'))
         );
         $field_values['multisafepay_tab'] = 'main_configuration';
 
@@ -718,6 +723,26 @@ class Multisafepay extends PaymentModule
                             )
                         )
                     ),
+                    array(
+                        'type' => 'switch',
+                        'label' => $this->l('Enable Tokenization'),
+                        'hint' => $this->l('Enable the Tokenization feature'),
+                        'name' => 'MULTISAFEPAY_ENABLE_TOKEN',
+                        'required' => false,
+                        'is_bool' => true,
+                        'values' => array(
+                            array(
+                                "code" => 'active_on',
+                                'value' => 1,
+                                'label' => $this->l('On')
+                            ),
+                            array(
+                                "code" => 'active_off',
+                                'value' => 0,
+                                'label' => $this->l('Off')
+                            )
+                        )
+                    )
                 ),
                 'submit' => array(
                     'title' => $this->l('Save'),
@@ -943,7 +968,13 @@ class Multisafepay extends PaymentModule
                         case "einvoice":
                             $externalOption->setForm($this->getEinvoice());
                             break;
-
+                        case "amex":
+                        case "visa":
+                        case "mastercard":
+                            if (Context::getContext()->customer->isLogged()) {
+                                $externalOption->setForm($this->getTokenization($gateway['code']));
+                            }
+                            break;
                         default:
                             $externalOption->setForm($this->getDefault($gateway['code']));
                             break;
@@ -1111,6 +1142,29 @@ class Multisafepay extends PaymentModule
         return $this->context->smarty->fetch('module:multisafepay/views/templates/front/issuers.tpl');
     }
 
+    protected function getTokenization($payment)
+    {
+        $multisafepay_module_dir = $this->_path;
+
+        $token_enabled = Configuration::get('MULTISAFEPAY_ENABLE_TOKEN');
+
+        if ($token_enabled) {
+            $this->context->smarty->assign([
+                'multisafepay_module_dir' => $multisafepay_module_dir,
+                'label_creditcard' => $this->l('Save your creditcard details for a next purchase.'),
+                'label_description' => $this->l('Provide a name for the creditcard *'),
+                'action' => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => $payment), true),
+                'gateway' => $payment,
+                'label_dropdown' => $this->l('Choose your creditcard...'),
+                'tokens' => $this->getRecurringsFromCustomerId($this->context->cart->id_customer),
+                'saved_tokens' => $this->tokensSaved(),
+                'saved_gateways' => $this->tokenGateways(),
+            ]);
+
+            return $this->context->smarty->fetch('module:multisafepay/views/templates/front/token.tpl');
+        }
+    }
+
     protected function getPayafter()
     {
         $multisafepay_module_dir = $this->_path;
@@ -1221,6 +1275,49 @@ class Multisafepay extends PaymentModule
             }
         }
         return false;
+    }
+
+
+    protected function addTokenizationTable()
+    {
+        $sql = "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "multisafepay_tokenization` 
+        ( `id` INT NOT NULL AUTO_INCREMENT , `customer_id` INT NOT NULL , `order_id` TEXT NOT NULL , `recurring_id` TEXT NULL, `cc_type` VARCHAR(64) NULL ,
+        `cc_last4` VARCHAR(4) NULL DEFAULT 0, `cc_expiry_date` VARCHAR(4) NULL DEFAULT 0, `cc_name` VARCHAR(64) NULL DEFAULT 0, PRIMARY KEY (id) )";
+
+        Db::getInstance()->execute($sql);
+    }
+
+    protected function getRecurringsFromCustomerId($customer_id)
+    {
+        if (!$this->context->customer->logged) {
+            return false;
+        }
+
+        $tokens = Db::getInstance()->ExecuteS("SELECT id, cc_name, recurring_id, cc_type  FROM " . _DB_PREFIX_ . "multisafepay_tokenization WHERE customer_id = {$customer_id} AND recurring_id != 'NULL'");
+
+        return $tokens;
+    }
+
+    protected function tokensSaved()
+    {
+        $saved_tokens = $this->getRecurringsFromCustomerId($this->context->cart->id_customer);
+
+        return empty((array)$saved_tokens);
+    }
+
+    protected function tokenGateways()
+    {
+        $tokens = $this->getRecurringsFromCustomerId($this->context->cart->id_customer);
+
+        $gateways = [];
+
+        foreach ($tokens as $token) {
+            if (!in_array(strtolower($token['cc_type']), $gateways)) {
+                $gateways[] = strtolower($token['cc_type']);
+            }
+        }
+
+        return $gateways;
     }
 
 }
