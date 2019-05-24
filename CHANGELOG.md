@@ -1,3 +1,9 @@
+## 4.4.0
+Release date: May 24th, 2019
+
+### Added
++ PLGPRSS-244: Add support for tokenization
+
 ## 4.3.1
 Release date: May 15th, 2019
 
