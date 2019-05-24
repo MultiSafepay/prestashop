@@ -2,7 +2,7 @@
 <module>
   <name>multisafepay</name>
   <displayName><![CDATA[MultiSafepay]]></displayName>
-  <version><![CDATA[4.3.1]]></version>
+  <version><![CDATA[4.4.0-rc1]]></version>
   <description><![CDATA[Process payments by using MultiSafepay secure payment processing]]></description>
   <author><![CDATA[MultiSafepay]]></author>
   <tab><![CDATA[payments_gateways]]></tab>
