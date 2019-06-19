@@ -85,27 +85,27 @@ class Multisafepay extends PaymentModule
         array("code" => "ideal", "name" => "iDEAL", 'config' => true),
         array("code" => "dotpay", "name" => "Dotpay", 'config' => true),
         array("code" => "payafter", "name" => "Betaal na Ontvangst", 'config' => true),
-        array("code" => "einvoice", "name" => "E-invoice", 'config' => true),
-        array("code" => "klarna", "name" => "Klarna Invoice", 'config' => true),
+        array("code" => "einvoice", "name" => "E-Invoicing", 'config' => true),
+        array("code" => "klarna", "name" => "Klarna", 'config' => true),
         array("code" => "mistercash", "name" => "Bancontact", 'config' => true),
         array("code" => "visa", "name" => "Visa", 'config' => true),
         array("code" => "eps", "name" => "EPS", 'config' => true),
         array("code" => "mastercard", "name" => "Mastercard", 'config' => true),
-        array("code" => "banktrans", "name" => "Banktransfer", 'config' => true),
+        array("code" => "banktrans", "name" => "Bank transfer", 'config' => true),
         array("code" => "psafecard", "name" => "Paysafecard", 'config' => true),
         array("code" => "maestro", "name" => "Maestro", 'config' => true),
         array("code" => "paypal", "name" => "PayPal", 'config' => true),
         array("code" => "giropay", "name" => "Giropay", 'config' => true),
-        array("code" => "directbank", "name" => "Sofort", 'config' => true),
+        array("code" => "directbank", "name" => "SOFORT Banking", 'config' => true),
         array("code" => "inghome", "name" => "ING Home'Pay", 'config' => true),
         array("code" => "belfius", "name" => "Belfius", 'config' => true),
         array("code" => "trustpay", "name" => "TrustPay", 'config' => true),
         array("code" => "kbc", "name" => "KBC", 'config' => true),
         array("code" => "dirdeb", "name" => "Direct Debit", 'config' => true),
-        array("code" => "alipay", "name" => "AliPay", 'config' => true),
+        array("code" => "alipay", "name" => "Alipay", 'config' => true),
         array("code" => "connect", "name" => "MultiSafepay", 'config' => true),
         array("code" => "amex", "name" => "American Express", 'config' => true),
-        array("code" => "santander", "name" => "Santander Betaalplan", 'config' => true),
+        array("code" => "santander", "name" => "Betaalplan", 'config' => true),
         array("code" => "afterpay", "name" => "AfterPay", 'config' => true),
         array("code" => "trustly", "name" => "Trustly", 'config' => true),
         array("code" => "idealqr", "name" => "iDEAL QR", 'config' => true),
@@ -278,7 +278,7 @@ class Multisafepay extends PaymentModule
         }
 
         /*
-        * Initialize Santander Betaalplan minimum/maximum amounts
+        * Initialize Betaalplan minimum/maximum amounts
         */
         Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . 'santander' . '_MIN_AMOUNT', 250);
         Configuration::updateValue('MULTISAFEPAY_GATEWAY_' . 'santander' . '_MAX_AMOUNT', 1000);

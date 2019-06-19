@@ -180,7 +180,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                             $this->errors[] = $this->module->l('There was an error processing your transaction request, please try again with another payment method. Error: ', 'payment') . $multisafepay->orders->result->error_code . ' - ' . $multisafepay->orders->result->error_info;
                             $this->redirectWithNotifications($this->context->link->getPageLink('order', true, null, array('step' => '3')));
                         } else {
-                            //For banktransfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wiretransafer email from Prestashop and provide the payment data.
+                            //For bank transfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wire transfer email from PrestaShop and provide the payment data.
                             if (Tools::getValue('gateway') == "banktrans") {
                                 $mailVars = array(
                                     '{bankwire_owner}' => $result->gateway_info->destination_holder_name,
@@ -200,7 +200,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 $this->errors[] = $this->module->l('There was an error processing your transaction request, please try again with another payment method. Error: ', 'payment') . $multisafepay->orders->result->error_code . ' - ' . $multisafepay->orders->result->error_info;
                 $this->redirectWithNotifications($this->context->link->getPageLink('order', true, null, array('step' => '3')));
             } else {
-                //For banktransfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wiretransafer email from Prestashop and provide the payment data.
+                //For bank transfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wire transfer email from PrestaShop and provide the payment data.
                 if (Tools::getValue('gateway') == "banktrans") {
                     $mailVars = array(
                         '{bankwire_owner}' => $result->gateway_info->destination_holder_name,

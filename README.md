@@ -1,34 +1,34 @@
 # Prestashop 1.7
-MultiSafepay Module for Prestashop 1.7
+MultiSafepay module for PrestaShop 1.7
 
-The MultiSafepay module for Prestashop 1.7 allows you to add all payment methods and giftcards offered by MultiSafepay into your Prestashop 1.7 webshop.
+The MultiSafepay module for PrestaShop 1.7 allows you to add all payment methods and gift cards offered by MultiSafepay into your PrestaShop 1.7 webshop.
 
-The MultiSafepay module for Prestashop 1.7 has support for:
+The MultiSafepay module for PrestaShop 1.7 has support for:
 
 Payment methods:
 1. AfterPay
-2. AliPay
+2. Alipay
 3. American Express
 4. Bancontact
-5. Banktransfer
+5. Bank transfer
 6. Belfius
-7. Betaal na Ontvangst
+7. Betaalplan
 8. Direct Debit
 9. Dotpay
-10. E-invoice
+10. E-Invoicing
 11. EPS
 12. Giropay
-13. iDEAL
-14. iDEAL QR
-15. ING Home'Pay
+13. ING Home'Pay
+14. iDEAL
+15. iDEAL QR
 16. KBC
-17. Klarna Invoice
+17. Klarna
 18. Maestro
 19. Mastercard
-20. PayPal
-21. Paysafecard
-22. Santander Betaalplan
-23. Sofort
+20. Pay After Delivery
+21. PayPal
+22. Paysafecard
+23. SOFORT Banking
 24. TrustPay
 25. Trustly
 26. Visa
@@ -56,7 +56,7 @@ The following giftcards are supported:
 20. Winkelcheque
 21. Yourgift
 
-For support you can contact MultiSafepay by e-mail using techsupport@multisafepay.com
+For support you can contact MultiSafepay by e-mail using <techsupport@multisafepay.com>
 
 # Installation
 The module needs to be uploaded to:
