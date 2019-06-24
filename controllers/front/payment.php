@@ -28,6 +28,9 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+require(_PS_MODULE_DIR_ . '/multisafepay/helpers/Helper.php');
+
 class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 {
 
@@ -188,7 +191,10 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                                     '{bankwire_address}' => $this->module->l('Payment reference : ', 'payment') . $result->gateway_info->reference
                                 );
 
-                                $this->module->validateOrder((int)$new_cart['cart']->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $multisafepay->orders->result->data->payment_details->type, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
+                                $helper = new Helper;
+                                $used_payment_method = $helper->getPaymentMethod($multisafepay->orders->result->data->payment_details->type);
+
+                                $this->module->validateOrder((int)$new_cart['cart']->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
                                 Tools::redirect($this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect", "transactionid" => $new_cart['cart']->id), true));
                                 exit;
                             } else {
@@ -207,7 +213,11 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                         '{bankwire_details}' => $result->gateway_info->destination_holder_iban,
                         '{bankwire_address}' => $this->module->l('Payment reference : ', 'payment') . $result->gateway_info->reference
                     );
-                    $this->module->validateOrder((int)$this->context->cart->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $multisafepay->orders->result->data->payment_details->type, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
+
+                    $helper = new Helper;
+                    $used_payment_method = $helper->getPaymentMethod($multisafepay->orders->result->data->payment_details->type);
+
+                    $this->module->validateOrder((int)$this->context->cart->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
                     Tools::redirect($this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect", "transactionid" => $this->context->cart->id), true));
                     exit;
                 } else {
