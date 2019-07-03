@@ -1,63 +1,32 @@
-# Prestashop 1.7
-MultiSafepay module for PrestaShop 1.7
+<p align="center">
+  <img src="https://www.multisafepay.com/img/multisafepaylogo.svg" width="400px" position="center">
+</p>
 
-The MultiSafepay module for PrestaShop 1.7 allows you to add all payment methods and gift cards offered by MultiSafepay into your PrestaShop 1.7 webshop.
+# MultiSafepay plugin for PrestaShop 1.7
 
-The MultiSafepay module for PrestaShop 1.7 has support for:
+Easily integrate MultiSafepay payment solutions into your PrestaShop 1.7 webshop with the free and completely new MultiSafepay PrestaShop 1.7 plugin.
 
-Payment methods:
-1. AfterPay
-2. Alipay
-3. American Express
-4. Bancontact
-5. Bank transfer
-6. Belfius
-7. Betaalplan
-8. Direct Debit
-9. Dotpay
-10. E-Invoicing
-11. EPS
-12. Giropay
-13. ING Home'Pay
-14. iDEAL
-15. iDEAL QR
-16. KBC
-17. Klarna
-18. Maestro
-19. Mastercard
-20. Pay After Delivery
-21. PayPal
-22. Paysafecard
-23. SOFORT Banking
-24. TrustPay
-25. Trustly
-26. Visa
+[![Latest Stable Version](https://img.shields.io/github/release/multisafepay/prestashop.svg)](https://github.com/MultiSafepay/PrestaShop)
 
-The following giftcards are supported:
-1. Babygiftcard
-2. Beauty and wellness
-3. Boekenbon
-4. Erotiekbon
-5. Fashioncheque
-6. Fashiongiftcard
-7. Fietsenbon
-8. Gezondheidsbon
-9. Givacard
-10. Goodcard
-11. Nationale tuinbon
-12. Nationale verwencadeaubon
-13. Parfumcadeaukaart
-14. Podium
-15. Sport en Fit
-16. VVV Bon
-17. Webshopgiftcard
-18. Wellnessgiftcard
-19. Wijncadeau
-20. Winkelcheque
-21. Yourgift
+## About MultiSafepay ##
+MultiSafepay is a collecting payment service provider which means we take care of the agreements, technical details and payment collection required for each payment method. You can start selling online today and manage all your transactions from one place.
+## Supported Payment Methods ##
+The supported Payment Methods & Giftcards for this plugin can be found over here: [Payment Methods & Giftcards](https://docs.multisafepay.com/plugins/prestashop-1-7/faq/#available-payment-methods-in-prestashop)
 
-For support you can contact MultiSafepay by e-mail using <techsupport@multisafepay.com>
+## Requirements
+- To use the plugin you need a MultiSafepay account. You can create a test account on https://testmerchant.multisafepay.com/signup
+- PrestaShop 1.7
 
-# Installation
-The module needs to be uploaded to:
-prestashop_root/modules/multisafepay/
+## Installation through backend
+1) Login in your backend and navigate to Modules.
+2) Click on "Upload a module"
+3) Drag and drop Plugin_PrestaShop_4.x.x.zip to have our plugin added to the backend.
+
+## Installation through SFTP
+1) Extract Plugin_PrestaShop_4.x.x.zip
+2) Upload the multisafepay folder to prestashop_root/modules/multisafepay/
+
+For additional information or instructions please see our [installation & configuration manual](https://docs.multisafepay.com/plugins/prestashop-1-7/manual/)
+ 
+## Support
+You can create issues on our repository. If you need any additional help or support, please contact <a href="mailto:techsupport@multisafepay.com">techsupport@multisafepay.com</a>
