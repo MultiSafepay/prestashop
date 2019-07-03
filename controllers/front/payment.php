@@ -28,6 +28,9 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+require(_PS_MODULE_DIR_ . '/multisafepay/helpers/Helper.php');
+
 class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 {
 
@@ -66,8 +69,8 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         }
 
         list ($items, $shopping_cart, $checkout_options) = $this->getShoppingCart();
-        list ($street_billing,  $house_number_billing)   = $this->parseAddress($billing->address1,  $billing->address2);
-        list ($street_shipping, $house_number_shipping)  = $this->parseAddress($shipping->address1, $shipping->address2);
+        list ($street_billing, $house_number_billing) = $this->parseAddress($billing->address1, $billing->address2);
+        list ($street_shipping, $house_number_shipping) = $this->parseAddress($shipping->address1, $shipping->address2);
 
         list ($type, $gateway_info) = $this->getTypeAndGatewayInfo($customer);
 
@@ -77,6 +80,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             "currency" => $currency->iso_code,
             "amount" => round(($this->context->cart->getOrderTotal(true, Cart::BOTH) * 100), 2),
             "description" => $this->module->l('Order of Cart: ', 'payment') . $this->context->cart->id,
+            "recurring_id" => $this->decryptRecurringId(),
             "var1" => "",
             "var2" => "",
             "var3" => "",
@@ -126,11 +130,10 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             "plugin" => array(
                 "shop" => 'Prestashop',
                 "shop_version" => _PS_VERSION_,
-                "plugin_version" => ' - Plugin 4.3.1',
+                "plugin_version" => ' - Plugin 4.4.0',
                 "partner" => "MultiSafepay",
-            ),
+            )
         );
-
 
         if (Tools::getValue('gateway') == "banktrans") {
             $transaction_data['customer']['disable_send_email'] = true;
@@ -143,6 +146,8 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         }
 
         try {
+            $this->setTokenization($customer, $this->context->cart);
+
             $result = $multisafepay->orders->post($transaction_data);
             if (Configuration::get('MULTISAFEPAY_DEBUG')) {
                 $logger = new FileLogger(0);
@@ -178,7 +183,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                             $this->errors[] = $this->module->l('There was an error processing your transaction request, please try again with another payment method. Error: ', 'payment') . $multisafepay->orders->result->error_code . ' - ' . $multisafepay->orders->result->error_info;
                             $this->redirectWithNotifications($this->context->link->getPageLink('order', true, null, array('step' => '3')));
                         } else {
-                            //For banktransfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wiretransafer email from Prestashop and provide the payment data.
+                            //For bank transfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wire transfer email from PrestaShop and provide the payment data.
                             if (Tools::getValue('gateway') == "banktrans") {
                                 $mailVars = array(
                                     '{bankwire_owner}' => $result->gateway_info->destination_holder_name,
@@ -186,7 +191,10 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                                     '{bankwire_address}' => $this->module->l('Payment reference : ', 'payment') . $result->gateway_info->reference
                                 );
 
-                                $this->module->validateOrder((int) $new_cart['cart']->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $multisafepay->orders->result->data->payment_details->type, null, $mailVars, (int) $currency->id, false, $customer->secure_key);
+                                $helper = new Helper;
+                                $used_payment_method = $helper->getPaymentMethod($multisafepay->orders->result->data->payment_details->type);
+
+                                $this->module->validateOrder((int)$new_cart['cart']->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
                                 Tools::redirect($this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect", "transactionid" => $new_cart['cart']->id), true));
                                 exit;
                             } else {
@@ -198,14 +206,18 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 $this->errors[] = $this->module->l('There was an error processing your transaction request, please try again with another payment method. Error: ', 'payment') . $multisafepay->orders->result->error_code . ' - ' . $multisafepay->orders->result->error_info;
                 $this->redirectWithNotifications($this->context->link->getPageLink('order', true, null, array('step' => '3')));
             } else {
-                //For banktransfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wiretransafer email from Prestashop and provide the payment data.
+                //For bank transfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wire transfer email from PrestaShop and provide the payment data.
                 if (Tools::getValue('gateway') == "banktrans") {
                     $mailVars = array(
                         '{bankwire_owner}' => $result->gateway_info->destination_holder_name,
                         '{bankwire_details}' => $result->gateway_info->destination_holder_iban,
                         '{bankwire_address}' => $this->module->l('Payment reference : ', 'payment') . $result->gateway_info->reference
                     );
-                    $this->module->validateOrder((int) $this->context->cart->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $multisafepay->orders->result->data->payment_details->type, null, $mailVars, (int) $currency->id, false, $customer->secure_key);
+
+                    $helper = new Helper;
+                    $used_payment_method = $helper->getPaymentMethod($multisafepay->orders->result->data->payment_details->type);
+
+                    $this->module->validateOrder((int)$this->context->cart->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
                     Tools::redirect($this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect", "transactionid" => $this->context->cart->id), true));
                     exit;
                 } else {
@@ -222,23 +234,22 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
      * getCart() generated the checkout data structure and items list
      */
 
-
     private function getSecondsActive()
     {
         $seconds_active = null;
-        $seconds  = Configuration::get('MULTISAFEPAY_TIME_ACTIVE');
+        $seconds = Configuration::get('MULTISAFEPAY_TIME_ACTIVE');
         $timeUnit = Configuration::get('MULTISAFEPAY_TIME_UNIT');
 
-        if ( empty ($seconds)) {
+        if (empty ($seconds)) {
             return $seconds_active;
         }
 
-        switch ($timeUnit){
+        switch ($timeUnit) {
             case 'days':
-                $seconds_active = $seconds*24*60*60;
+                $seconds_active = $seconds * 24 * 60 * 60;
                 break;
-              case 'hours':
-                $seconds_active = $seconds*60*60;
+            case 'hours':
+                $seconds_active = $seconds * 60 * 60;
                 break;
             case 'seconds':
                 $seconds_active = $seconds;
@@ -267,25 +278,25 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 
         foreach ($products as $product) {
 
-            $product_name     = $product['name'];
+            $product_name = $product['name'];
             $merchant_item_id = $product['id_product'];
 
             if (!empty($product['attributes_small'])) {
-                $product_name     .= ' ( ' . $product['attributes_small'] . ' )';
-                $merchant_item_id .= '-'. $product['id_product_attribute'];
+                $product_name .= ' ( ' . $product['attributes_small'] . ' )';
+                $merchant_item_id .= '-' . $product['id_product_attribute'];
             }
 
             $items .= "<li>" . $product['cart_quantity'] . ' x : ' . $product_name . "</li>\n";
 
             $shopping_cart['items'][] = array(
-                'name'               => $product_name,
-                'description'        => $product['description_short'],
-                'unit_price'         => round($product['price'], 4),
-                'quantity'           => $product['quantity'],
-                'merchant_item_id'   => $merchant_item_id,
+                'name' => $product_name,
+                'description' => $product['description_short'],
+                'unit_price' => round($product['price'], 4),
+                'quantity' => $product['quantity'],
+                'merchant_item_id' => $merchant_item_id,
                 'tax_table_selector' => $product['tax_name'],
-                'weight' => array('unit'  => $product['weight'],
-                                  'value' => 'KG')
+                'weight' => array('unit' => $product['weight'],
+                    'value' => 'KG')
             );
             array_push($checkout_options['tax_tables']['alternate'], array('name' => $product['tax_name'], 'rules' => array(array('rate' => $product['rate'] / 100))));
         }
@@ -332,7 +343,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 'tax_table_selector' => 'Wrapping',
                 'weight' => array('unit' => 0, 'value' => 'KG')
             );
-            $wrapping_tax_percentage = round(($total_data['total_wrapping'] - $total_data['total_wrapping_tax_exc']) * ( $total_data['total_wrapping_tax_exc'] / 100), 2);
+            $wrapping_tax_percentage = round(($total_data['total_wrapping'] - $total_data['total_wrapping_tax_exc']) * ($total_data['total_wrapping_tax_exc'] / 100), 2);
             array_push($checkout_options['tax_tables']['alternate'], array('name' => 'Wrapping', 'rules' => array(array('rate' => $wrapping_tax_percentage))));
         }
 
@@ -347,63 +358,55 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 'tax_table_selector' => 'Shipping',
                 'weight' => array('unit' => 0, 'value' => 'KG')
             );
-            $shipping_tax_percentage = round(($total_data['total_shipping'] - $total_data['total_shipping_tax_exc']) / ( $total_data['total_shipping_tax_exc']), 2);
+            $shipping_tax_percentage = round(($total_data['total_shipping'] - $total_data['total_shipping_tax_exc']) / ($total_data['total_shipping_tax_exc']), 2);
             array_push($checkout_options['tax_tables']['alternate'], array('name' => 'Shipping', 'rules' => array(array('rate' => $shipping_tax_percentage))));
         }
 
-        return array ($items, $shopping_cart, $checkout_options);
+        return array($items, $shopping_cart, $checkout_options);
     }
 
     private function parseAddress($address1, $address2 = '')
     {
-        $address1 = trim ($address1);
-        $address2 = trim ($address2);
-        $adress   = trim ($address1 . ' ' . $address2);
+        $address1 = trim($address1);
+        $address2 = trim($address2);
+        $adress = trim($address1 . ' ' . $address2);
 
-        $aMatch   = array();
-        $pattern  = '#^(.*?)([0-9]{1,5})([\w[:punct:]\-/]*)$#';
+        $aMatch = array();
+        $pattern = '#^(.*?)([0-9]{1,5})([\w[:punct:]\-/]*)$#';
         $matchResult = preg_match($pattern, $adress, $aMatch);
 
-        $street      = (isset($aMatch[1])) ? $aMatch[1] : '';
-        $apartment   = (isset($aMatch[2])) ? $aMatch[2] : '' ;
-        $apartment  .= (isset($aMatch[3]) && $aMatch[3] != $aMatch[2]) ? $aMatch[3] : '';
+        $street = (isset($aMatch[1])) ? $aMatch[1] : '';
+        $apartment = (isset($aMatch[2])) ? $aMatch[2] : '';
+        $apartment .= (isset($aMatch[3]) && $aMatch[3] != $aMatch[2]) ? $aMatch[3] : '';
 
-        $street    = trim ($street);
-        $apartment = trim ($apartment);
+        $street = trim($street);
+        $apartment = trim($apartment);
 
         return array($street, $apartment);
     }
 
+
     private function getTypeAndGatewayInfo($customer)
     {
-        switch ( Tools::getValue('gateway'))
-        {
+        switch (Tools::getValue('gateway')) {
             case 'ideal':
-                $type         = 'direct';
+                $type = 'direct';
                 $gateway_info = array(
                     "issuer_id" => Tools::getValue('issuer')
                 );
                 break;
-
-//          case 'klarna':
             case 'payafter':
             case 'einvoice':
-                $type         = 'direct';
+                $type = 'direct';
                 $gateway_info = array(
-                    'birthday'    => Tools::getValue('birthday'),
+                    'birthday' => Tools::getValue('birthday'),
                     'bankaccount' => Tools::getValue('bankaccount'),
-                    'phone'       => Tools::getValue('phone'),
-                    'gender'      => Tools::getValue('gender'),
-                    'email'       => $customer->email
-                    );
+                    'phone' => Tools::getValue('phone'),
+                    'gender' => Tools::getValue('gender'),
+                    'email' => $customer->email
+                );
                 break;
-
-
-//          case 'alipay':
             case 'banktrans':
-//          case 'belfius':
-//          case 'dirdeb':
-//          case 'directbank':
             case 'ing':
             case 'kbc':
             case 'paypal':
@@ -413,13 +416,51 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 $type = 'direct';
                 $gateway_info = array();
                 break;
-
+            case 'amex':
+            case 'visa':
+            case 'mastercard':
+                if ($this->decryptRecurringId() !== false) {
+                    $type = 'direct';
+                    $gateway_info = array();
+                } else {
+                    $type = 'redirect';
+                    $gateway_info = array();
+                }
+                break;
             default:
                 $type = 'redirect';
                 $gateway_info = array();
                 break;
         }
-        return (array ($type, $gateway_info));
+        return (array($type, $gateway_info));
     }
 
+    private function decryptRecurringId()
+    {
+        $recurringId = pSQL(Tools::getValue('saved_cc'));
+        return PhpEncryptionCore::decrypt($recurringId);
+    }
+
+
+    private function setTokenization($customer_data, $cart_data)
+    {
+        $creditcard_input = Tools::getValue('creditcard-input');
+        if (!empty($creditcard_input) && !$this->isExistingRecurring($customer_data->id, $creditcard_input)) {
+            Db::getInstance()->insert('multisafepay_tokenization', array(
+                'customer_id' => $customer_data->id,
+                'order_id' => $cart_data->id,
+                'cc_name' => pSQL($creditcard_input),
+            ));
+        }
+    }
+
+    private function isExistingRecurring($customer_id, $creditcard_input)
+    {
+        $sql = new DbQuery();
+        $sql->select('id')
+            ->from('multisafepay_tokenization')
+            ->where("customer_id = {$customer_id} AND cc_name = '" . pSQL($creditcard_input) . "'");
+
+        return Db::getInstance()->executeS($sql);
+    }
 }

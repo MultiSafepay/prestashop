@@ -28,6 +28,8 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+require(_PS_MODULE_DIR_ . '/multisafepay/helpers/Helper.php');
+
 class MultisafepayValidationModuleFrontController extends ModuleFrontController
 {
 
@@ -147,7 +149,11 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                     }
 
                     $extra_properties = array('transaction_id' => $this->transaction->transaction_id);
-                    $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $this->transaction->payment_details->type, null, $extra_properties, (int) $cart->id_currency, false, $customer->secure_key);
+
+                    $helper = new Helper;
+                    $used_payment_method = $helper->getPaymentMethod($this->transaction->payment_details->type);
+
+                    $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $used_payment_method, null, $extra_properties, (int) $cart->id_currency, false, $customer->secure_key);
                     $order = new Order(Order::getOrderByCartId((int) $cart_id));
                     if ($paid != $total){
                          $this->addMessage($order, $customer);
@@ -262,7 +268,11 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                     }
 
                     $extra_properties = array('transaction_id' => $this->transaction->transaction_id);
-                    $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $this->transaction->payment_details->type, null, $extra_properties, (int) $cart->id_currency, false, $customer->secure_key);
+
+                    $helper = new Helper;
+                    $used_payment_method = $helper->getPaymentMethod($this->transaction->payment_details->type);
+
+                    $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $used_payment_method, null, $extra_properties, (int) $cart->id_currency, false, $customer->secure_key);
                     $order = new Order(Order::getOrderByCartId((int) $cart_id));
                     if ($paid != $total){
                          $this->addMessage($order, $customer);
@@ -276,6 +286,9 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
         }
 
         $this->unlock();
+        if (Configuration::get('MULTISAFEPAY_ENABLE_TOKEN')) {
+            $this->updateTokenization();
+        }
         echo 'OK';
         exit;
     }
@@ -321,5 +334,24 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
     {
         if (file_exists($this->lock_file))
             unlink($this->lock_file);
+    }
+
+
+    private function updateTokenization()
+    {
+        if (isset($this->transaction->payment_details->type)
+        && isset($this->transaction->payment_details->last4)
+        && isset($this->transaction->payment_details->card_expiry_date)) {
+            Db::getInstance()->update(
+                'multisafepay_tokenization',
+                array(
+                    'recurring_id' => PhpEncryptionCore::encrypt($this->transaction->payment_details->recurring_id),
+                    'cc_type' => $this->transaction->payment_details->type,
+                    'cc_last4' => $this->transaction->payment_details->last4,
+                    'cc_expiry_date' => $this->transaction->payment_details->card_expiry_date,
+                ),
+                'order_id = ' . pSQL(Tools::getValue('transactionid'))
+            );
+        }
     }
 }
