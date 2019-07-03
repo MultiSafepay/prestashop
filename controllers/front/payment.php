@@ -28,6 +28,9 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+require(_PS_MODULE_DIR_ . '/multisafepay/helpers/Helper.php');
+
 class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 {
 
@@ -127,7 +130,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             "plugin" => array(
                 "shop" => 'Prestashop',
                 "shop_version" => _PS_VERSION_,
-                "plugin_version" => ' - Plugin 4.3.1',
+                "plugin_version" => ' - Plugin 4.4.0',
                 "partner" => "MultiSafepay",
             )
         );
@@ -180,7 +183,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                             $this->errors[] = $this->module->l('There was an error processing your transaction request, please try again with another payment method. Error: ', 'payment') . $multisafepay->orders->result->error_code . ' - ' . $multisafepay->orders->result->error_info;
                             $this->redirectWithNotifications($this->context->link->getPageLink('order', true, null, array('step' => '3')));
                         } else {
-                            //For banktransfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wiretransafer email from Prestashop and provide the payment data.
+                            //For bank transfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wire transfer email from PrestaShop and provide the payment data.
                             if (Tools::getValue('gateway') == "banktrans") {
                                 $mailVars = array(
                                     '{bankwire_owner}' => $result->gateway_info->destination_holder_name,
@@ -188,7 +191,10 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                                     '{bankwire_address}' => $this->module->l('Payment reference : ', 'payment') . $result->gateway_info->reference
                                 );
 
-                                $this->module->validateOrder((int)$new_cart['cart']->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $multisafepay->orders->result->data->payment_details->type, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
+                                $helper = new Helper;
+                                $used_payment_method = $helper->getPaymentMethod($multisafepay->orders->result->data->payment_details->type);
+
+                                $this->module->validateOrder((int)$new_cart['cart']->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
                                 Tools::redirect($this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect", "transactionid" => $new_cart['cart']->id), true));
                                 exit;
                             } else {
@@ -200,14 +206,18 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 $this->errors[] = $this->module->l('There was an error processing your transaction request, please try again with another payment method. Error: ', 'payment') . $multisafepay->orders->result->error_code . ' - ' . $multisafepay->orders->result->error_info;
                 $this->redirectWithNotifications($this->context->link->getPageLink('order', true, null, array('step' => '3')));
             } else {
-                //For banktransfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wiretransafer email from Prestashop and provide the payment data.
+                //For bank transfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wire transfer email from PrestaShop and provide the payment data.
                 if (Tools::getValue('gateway') == "banktrans") {
                     $mailVars = array(
                         '{bankwire_owner}' => $result->gateway_info->destination_holder_name,
                         '{bankwire_details}' => $result->gateway_info->destination_holder_iban,
                         '{bankwire_address}' => $this->module->l('Payment reference : ', 'payment') . $result->gateway_info->reference
                     );
-                    $this->module->validateOrder((int)$this->context->cart->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $multisafepay->orders->result->data->payment_details->type, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
+
+                    $helper = new Helper;
+                    $used_payment_method = $helper->getPaymentMethod($multisafepay->orders->result->data->payment_details->type);
+
+                    $this->module->validateOrder((int)$this->context->cart->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
                     Tools::redirect($this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect", "transactionid" => $this->context->cart->id), true));
                     exit;
                 } else {
