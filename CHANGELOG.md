@@ -1,8 +1,11 @@
 ## 4.4.0
-Release date: May 24th, 2019
+Release date: July 3rd, 2019
 
 ### Added
 + PLGPRSS-244: Add support for tokenization
+
+### Changed
++ PLGPRSS17-35: Display proper gateway name as used payment method, instead of gateway code
 
 ## 4.3.1
 Release date: May 15th, 2019
