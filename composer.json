@@ -1,5 +1,5 @@
 {
-  "name": "multi-safepay/presta-shop",
+  "name": "multisafepay/prestashop",
   "description": "Prestashop 1.7 compatible MultiSafepay module\n",
   "license": "AFL - Academic Free License (AFL 3.0)",
   "require": {
