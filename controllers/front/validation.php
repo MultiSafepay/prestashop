@@ -277,10 +277,6 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                     if ($paid != $total){
                          $this->addMessage($order, $customer);
                     }
-
-                    $this->unlock();
-                    Tools::redirect('index.php?controller=order-confirmation&id_cart=' . (int) $cart->id . '&id_module=' . (int) $this->module->id . '&id_order=' . $order->id . '&key=' . $customer->secure_key);
-                    exit;
                 }
             }
         }
