@@ -8,5 +8,8 @@
   "config": {
     "preferred-install": "dist"
   },
-  "type": "prestashop-module"
+  "type": "prestashop-module",
+  "extra": {
+    "installer-name": "multisafepay"
+  }
 }
