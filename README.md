@@ -29,4 +29,4 @@ The supported Payment Methods & Giftcards for this plugin can be found over here
 For additional information or instructions please see our [installation & configuration manual](https://docs.multisafepay.com/plugins/prestashop-1-7/manual/)
  
 ## Support
-You can create issues on our repository. If you need any additional help or support, please contact <a href="mailto:techsupport@multisafepay.com">techsupport@multisafepay.com</a>
+You can create issues on our repository. If you need any additional help or support, please contact <a href="mailto:integration@multisafepay.com">integration@multisafepay.com</a>
