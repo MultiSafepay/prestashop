@@ -273,11 +273,9 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         $checkout_options['tax_tables']['alternate'][] = '';
 
         // Products
-        $products = $cart->getProducts();
         $items = "<ul>\n";
-
+        $products = array_merge($total_data['products'], $total_data['gift_products']);
         foreach ($products as $product) {
-
             $product_name = $product['name'];
             $merchant_item_id = $product['id_product'];
 
@@ -298,14 +296,14 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 'weight' => array('unit' => $product['weight'],
                     'value' => 'KG')
             );
-            array_push($checkout_options['tax_tables']['alternate'], array('name' => $product['tax_name'], 'rules' => array(array('rate' => $product['rate'] / 100))));
+            $checkout_options['tax_tables']['alternate'][] =
+                array('name' => $product['tax_name'], 'rules' => array(array('rate' => $product['rate'] / 100)));
         }
-        $items .= "</ul>\n";
 
+        $items .= "</ul>\n";
 
         // Fee
         if (isset($cart->feeamount) && $cart->feeamount > 0) {
-
             $shopping_cart['items'][] = array(
                 'name' => 'Fee',
                 'description' => $this->module->l('Fee', 'payment'),
@@ -315,7 +313,8 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 'tax_table_selector' => 'Fee',
                 'weight' => array('unit' => 0, 'value' => 'KG')
             );
-            array_push($checkout_options['tax_tables']['alternate'], array('name' => 'Fee', 'rules' => array(array('rate' => '0.00'))));
+            $checkout_options['tax_tables']['alternate'][] =
+                array('name' => 'Fee', 'rules' => array(array('rate' => '0.00')));
         }
 
         // Discount
@@ -329,7 +328,8 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 'tax_table_selector' => 'Discount',
                 'weight' => array('unit' => 0, 'value' => 'KG')
             );
-            array_push($checkout_options['tax_tables']['alternate'], array('name' => 'Discount', 'rules' => array(array('rate' => '0.00'))));
+            $checkout_options['tax_tables']['alternate'][] =
+                array('name' => 'Discount', 'rules' => array(array('rate' => '0.00')));
         }
 
         // Wrapping
@@ -344,7 +344,8 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 'weight' => array('unit' => 0, 'value' => 'KG')
             );
             $wrapping_tax_percentage = round(($total_data['total_wrapping'] - $total_data['total_wrapping_tax_exc']) * ($total_data['total_wrapping_tax_exc'] / 100), 2);
-            array_push($checkout_options['tax_tables']['alternate'], array('name' => 'Wrapping', 'rules' => array(array('rate' => $wrapping_tax_percentage))));
+            $checkout_options['tax_tables']['alternate'][] =
+                array('name' => 'Wrapping', 'rules' => array(array('rate' => $wrapping_tax_percentage)));
         }
 
         // Shipping
@@ -359,7 +360,8 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 'weight' => array('unit' => 0, 'value' => 'KG')
             );
             $shipping_tax_percentage = round(($total_data['total_shipping'] - $total_data['total_shipping_tax_exc']) / ($total_data['total_shipping_tax_exc']), 2);
-            array_push($checkout_options['tax_tables']['alternate'], array('name' => 'Shipping', 'rules' => array(array('rate' => $shipping_tax_percentage))));
+            $checkout_options['tax_tables']['alternate'][] =
+                array('name' => 'Shipping', 'rules' => array(array('rate' => $shipping_tax_percentage)));
         }
 
         return array($items, $shopping_cart, $checkout_options);
