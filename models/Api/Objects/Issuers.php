@@ -45,5 +45,4 @@ class Issuers extends Core
 
         return $this->data;
     }
-
 }

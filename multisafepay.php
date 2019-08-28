@@ -139,7 +139,7 @@ class Multisafepay extends PaymentModule
             $this->gateways[$i]['sort'] = (int) Configuration::get('MULTISAFEPAY_GATEWAY_' . $this->gateways[$i]['code'] . '_SORT');
         }
 
-        usort($this->gateways, function($a, $b) {
+        usort($this->gateways, function ($a, $b) {
             return $a['sort'] - $b['sort'];
         });
 
@@ -160,7 +160,7 @@ class Multisafepay extends PaymentModule
             $this->giftcards[$i]['sort'] = (int) Configuration::get('MULTISAFEPAY_GIFTCARD_' . $this->giftcards[$i]['code'] . '_SORT');
         }
 
-        usort($this->giftcards, function($a, $b) {
+        usort($this->giftcards, function ($a, $b) {
             return $a['sort'] - $b['sort'];
         });
 
@@ -421,10 +421,9 @@ class Multisafepay extends PaymentModule
         $postMessages['warnings'] = array();
 
 
-        if ( Tools::isSubmit('btnSubmit') &&
+        if (Tools::isSubmit('btnSubmit') &&
             ( Configuration::get('MULTISAFEPAY_ENVIRONMENT') != Tools::getValue('MULTISAFEPAY_ENVIRONMENT') ||
               Configuration::get('MULTISAFEPAY_API_KEY')     != Tools::getValue('MULTISAFEPAY_API_KEY') ) ) {
-
             $postMessages['errors'] = $this->checkApiKey();
             return $postMessages;
         }
@@ -434,7 +433,7 @@ class Multisafepay extends PaymentModule
             return $postMessages;
         }
 
-         if (Tools::isSubmit('btnGiftcardsSubmit')) {
+        if (Tools::isSubmit('btnGiftcardsSubmit')) {
             $postMessages['warnings'] = $this->getActiveGiftcards();
             return $postMessages;
         }
@@ -886,8 +885,6 @@ class Multisafepay extends PaymentModule
         // loop through the available MultiSafepay gateways
         foreach ($this->gateways as $gateway) {
             if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway['code']) == 1) {
-
-
                 $active = false;
 
                 /*
@@ -911,10 +908,10 @@ class Multisafepay extends PaymentModule
                 }
 
 
-                $min_amount = floatval (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MIN_AMOUNT'));
-                $max_amount = floatval (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MAX_AMOUNT'));
+                $min_amount = floatval(Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MIN_AMOUNT'));
+                $max_amount = floatval(Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MAX_AMOUNT'));
 
-                if ( (!empty($min_amount) && $amount < $min_amount) || (!empty($max_amount) && $amount > $max_amount)) {
+                if ((!empty($min_amount) && $amount < $min_amount) || (!empty($max_amount) && $amount > $max_amount)) {
                     $active = false;
                 }
 
@@ -1059,22 +1056,20 @@ class Multisafepay extends PaymentModule
         $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
 
         if (!empty($multisafepay->getApiKey())) {
-
             $mspGateways = array_column($multisafepay->gateways->get(), 'id');
             $mspGateways = array_map('strtolower', $mspGateways);
 
             // Loop all available gateways in this plug-in
-            foreach ($this->gateways as $gateway){
-
+            foreach ($this->gateways as $gateway) {
                 // Skip connect as it is not a real gateway
-                if ($gateway["code"] == 'connect' ){
+                if ($gateway["code"] == 'connect') {
                     continue;
                 }
 
                 // check if gateway is enabled in the plug-in
-                if ( Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"]) ) {
-                    if ( !in_array( $gateway["code"], $mspGateways )) {
-                        $warnings[] = sprintf ("%s %s",  $gateway["name"], $this->l('Is not activated in your Multisafepay account'));
+                if (Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"])) {
+                    if (!in_array($gateway["code"], $mspGateways)) {
+                        $warnings[] = sprintf("%s %s", $gateway["name"], $this->l('Is not activated in your Multisafepay account'));
                     }
                 }
             }
@@ -1092,17 +1087,15 @@ class Multisafepay extends PaymentModule
         $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
 
         if (!empty($multisafepay->getApiKey())) {
-
             $mspGateways = array_column($multisafepay->gateways->get(), 'id');
             $mspGateways = array_map('strtolower', $mspGateways);
 
             // Loop all available gateways in this plug-in
-            foreach ($this->giftcards as $giftcard){
-
+            foreach ($this->giftcards as $giftcard) {
                 // check if giftcards is enabled in the plug-in
-                if ( Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"]) ) {
-                    if ( !in_array( $giftcard["code"], $mspGateways )) {
-                        $warnings[] = sprintf ("%s %s",  $giftcard["name"], $this->l('Is not activated in your Multisafepay account'));
+                if (Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"])) {
+                    if (!in_array($giftcard["code"], $mspGateways)) {
+                        $warnings[] = sprintf("%s %s", $giftcard["name"], $this->l('Is not activated in your Multisafepay account'));
                     }
                 }
             }
@@ -1181,7 +1174,7 @@ class Multisafepay extends PaymentModule
             'phone'             => $this->getPhoneNumber(),
             'bankaccount'       => '',
 
-            'terms'             => sprintf ( $this->l('By confirming this order you agree with the %s Terms and Conditions %s of MultiFactor'),  '<a href="https://www.multifactor.nl/voorwaarden/betalingsvoorwaarden-consument/" target="_blank">' , '</a>')
+            'terms'             => sprintf($this->l('By confirming this order you agree with the %s Terms and Conditions %s of MultiFactor'), '<a href="https://www.multifactor.nl/voorwaarden/betalingsvoorwaarden-consument/" target="_blank">', '</a>')
 
         ]);
 
@@ -1204,7 +1197,7 @@ class Multisafepay extends PaymentModule
             'phone'             => $this->getPhoneNumber(),
             'bankaccount'       => '',
 
-            'terms'             => sprintf ( $this->l('By confirming this order you agree with the %s Terms and Conditions %s of MultiFactor'),  '<a href="https://www.multifactor.nl/voorwaarden/betalingsvoorwaarden-consument/" target="_blank">' , '</a>')
+            'terms'             => sprintf($this->l('By confirming this order you agree with the %s Terms and Conditions %s of MultiFactor'), '<a href="https://www.multifactor.nl/voorwaarden/betalingsvoorwaarden-consument/" target="_blank">', '</a>')
 
         ]);
 
@@ -1257,7 +1250,7 @@ class Multisafepay extends PaymentModule
     protected function checkApiKey()
     {
         $Check = new CheckAPI();
-        $error = $Check->myConnection( Tools::getValue('MULTISAFEPAY_API_KEY'), Tools::getValue('MULTISAFEPAY_ENVIRONMENT'));
+        $error = $Check->myConnection(Tools::getValue('MULTISAFEPAY_API_KEY'), Tools::getValue('MULTISAFEPAY_ENVIRONMENT'));
 
         return $error;
     }
@@ -1319,5 +1312,4 @@ class Multisafepay extends PaymentModule
 
         return $gateways;
     }
-
 }

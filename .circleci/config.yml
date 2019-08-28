@@ -1,0 +1,27 @@
+version: 2
+jobs:
+  codesniffer:
+    docker:
+      - image: circleci/php:7.1-node-browsers
+    working_directory: /var/www/html
+    steps:
+      - checkout
+      - restore_cache:
+          key: -v1-{{ checksum "/var/www/html/composer.json"}}
+      - run:
+          name: Composer install
+          command: |
+            composer install --prefer-dist
+      - save_cache:
+          key: -v1-{{ checksum "/var/www/html/composer.json"}}
+          paths:
+            - /var/www/html/vendor
+      - run:
+          name: Run Code Sniffer
+          command: |
+            vendor/bin/phpcs --ignore=*/vendor/* --standard=phpcs.ruleset.xml -n /var/www/html
+workflows:
+  version: 2
+  default_check:
+    jobs:
+      - codesniffer

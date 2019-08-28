@@ -9,6 +9,9 @@
     "preferred-install": "dist"
   },
   "type": "prestashop-module",
+  "require-dev": {
+    "squizlabs/php_codesniffer": "^3.4"
+  },
   "extra": {
     "installer-name": "multisafepay"
   }

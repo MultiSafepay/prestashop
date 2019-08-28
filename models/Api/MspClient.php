@@ -75,7 +75,7 @@ class MspClient
         return $this->api_key;
     }
 
-    public function processAPIRequest($http_method, $api_method, $http_body = NULL)
+    public function processAPIRequest($http_method, $api_method, $http_body = null)
     {
 
         $url = $this->api_url . $api_method;
@@ -86,7 +86,7 @@ class MspClient
             "api_key:" . $this->api_key,
         );
 
-        if ($http_body !== NULL) {
+        if ($http_body !== null) {
             $request_headers[] = "Content-Type: application/json";
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $http_body);
@@ -114,5 +114,4 @@ class MspClient
         curl_close($ch);
         return $body;
     }
-
 }

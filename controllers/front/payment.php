@@ -240,7 +240,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         $seconds = Configuration::get('MULTISAFEPAY_TIME_ACTIVE');
         $timeUnit = Configuration::get('MULTISAFEPAY_TIME_UNIT');
 
-        if (empty ($seconds)) {
+        if (empty($seconds)) {
             return $seconds_active;
         }
 

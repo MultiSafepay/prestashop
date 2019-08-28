@@ -70,5 +70,4 @@ class Orders extends Core
     {
         return $this->data->payment_url;
     }
-
 }
