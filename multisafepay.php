@@ -303,31 +303,25 @@ class Multisafepay extends PaymentModule
         return parent::uninstall();
     }
 
+    /**
+     * @param $params
+     */
     public function hookActionOrderStatusPostUpdate($params)
     {
-        if ($params['newOrderStatus']->id == Configuration::get('PS_OS_SHIPPING')) {
-            $order = new Order(Order::getOrderByCartId($params['cart']->id));
-            if ($order->payment == 'KLARNA' ||
-                    $order->payment == 'PAYAFTER' ||
-                    $order->payment == 'EINVOICE' ||
-                    $order->payment == 'AFTERPAY' ||
-                    $order->payment == 'SANTANDER'
-                ) {
-                $carrier = new Carrier((int) $params['cart']->id_carrier);
+        if ($params['newOrderStatus']->id === Configuration::get('PS_OS_SHIPPING')) {
+            $carrier = new Carrier((int)$params['cart']->id_carrier);
+            $shipData = array(
+                'tracktrace_code' => '',
+                'carrier' => $carrier->name,
+                'ship_date' => date('Y-m-d H:i:s'),
+                'reason' => 'Shipped'
+            );
+            $endpoint = 'orders/' . $params['cart']->id;
 
-                $multisafepay = new MspClient();
-                $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
-                $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
-
-                $endpoint = 'orders/' . $params['cart']->id;
-                $ship_data = array(
-                    "tracktrace_code" => '',
-                    "carrier" => $carrier->name,
-                    "ship_date" => date('Y-m-d H:i:s'),
-                    "reason" => 'Shipped'
-                );
-                $multisafepay->orders->patch($ship_data, $endpoint);
-            }
+            $multisafepay = new MspClient();
+            $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
+            $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
+            $multisafepay->orders->patch($shipData, $endpoint);
         }
     }
 
