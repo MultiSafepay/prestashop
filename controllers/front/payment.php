@@ -192,6 +192,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                                 );
 
                                 $helper = new Helper;
+                                $helper->saveBankTransferDetails($result->gateway_info, $this->context->cart->id);
                                 $used_payment_method = $helper->getPaymentMethod($multisafepay->orders->result->data->payment_details->type);
 
                                 $this->module->validateOrder((int)$new_cart['cart']->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
@@ -215,6 +216,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                     );
 
                     $helper = new Helper;
+                    $helper->saveBankTransferDetails($result->gateway_info, $this->context->cart->id);
                     $used_payment_method = $helper->getPaymentMethod($multisafepay->orders->result->data->payment_details->type);
 
                     $this->module->validateOrder((int)$this->context->cart->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);

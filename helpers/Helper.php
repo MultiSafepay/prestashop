@@ -53,4 +53,16 @@ class Helper extends Module
         }
         return $result;
     }
+
+    /**
+     * @param $bankDetails
+     * @param int $cartId
+     */
+    public function saveBankTransferDetails($bankDetails, $cartId)
+    {
+        $msg = new Message();
+        $msg->message = json_encode($bankDetails);
+        $msg->id_cart = (int)$cartId;
+        $msg->add();
+    }
 }

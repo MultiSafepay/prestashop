@@ -176,7 +176,7 @@ class Multisafepay extends PaymentModule
     public function install()
     {
         if (!parent::install() || !$this->registerHook('paymentOptions') || !$this->registerHook('paymentReturn') || !$this->registerHook('actionOrderStatusPostUpdate')
-            || !$this->registerHook('actionFrontControllerSetMedia')
+            || !$this->registerHook('displayPDFInvoice') || !$this->registerHook('actionFrontControllerSetMedia')
         ) {
             return false;
         }
@@ -237,6 +237,31 @@ class Multisafepay extends PaymentModule
     }
 
 
+    /**
+     * @param $params
+     * @return string
+     */
+    public function hookDisplayPDFInvoice($params)
+    {
+        $invoice = $params['object'];
+        $order = new Order($invoice->id_order);
+
+        if ($order->payment !== 'Bank transfer') {
+            return;
+        }
+
+        $message = json_decode($order->getFirstMessage());
+
+        $invoiceBankDetails = '<table>';
+        $invoiceBankDetails .= '<tr><td colspan="2"><strong>' . $this->l('Payment information') . '</strong></td></tr>';
+        $invoiceBankDetails .= '<tr><td>' . $this->l('Name') . ':</td><td>' . $message->destination_holder_name . '</td></tr>';
+        $invoiceBankDetails .= '<tr><td>' . $this->l('IBAN') . ':</td><td>' . $message->destination_holder_iban . '</td></tr>';
+        $invoiceBankDetails .= '<tr><td>' . $this->l('Reference number') . ':</td><td>' . $message->reference . '</td></tr>';
+        $invoiceBankDetails .= '</table>';
+
+        return $invoiceBankDetails;
+    }
+
     public function hookActionFrontControllerSetMedia()
     {
         $this->context->controller->addJS($this->_path . 'views/js/multisafepay_front.js');
@@ -292,6 +317,7 @@ class Multisafepay extends PaymentModule
         $this->unregisterHook('paymentReturn');
         $this->unregisterHook('actionOrderStatusPostUpdate');
         $this->unregisterHook('actionFrontControllerSetMedia');
+        $this->unregisterHook('displayPDFInvoice');
 
         Configuration::deleteByName('MULTISAFEPAY_API_KEY');
         Configuration::deleteByName('MULTISAFEPAY_DEBUG');
