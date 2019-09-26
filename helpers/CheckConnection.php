@@ -28,8 +28,11 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+namespace MultiSafepay\PrestaShop\helpers;
 
-class CheckAPI extends Module
+use MultiSafepay\PrestaShop\models\Api\MspClient;
+
+class CheckConnection extends \Module
 {
 
     public function myConnection($api = null, $mode = null)

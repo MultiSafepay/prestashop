@@ -28,7 +28,8 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-require_once dirname(__FILE__) . "/Core.php";
+
+namespace MultiSafepay\PrestaShop\models\Api\Objects;
 
 class Orders extends Core
 {
