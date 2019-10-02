@@ -28,9 +28,12 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-require_once dirname(__FILE__) . "/Objects/Orders.php";
-require_once dirname(__FILE__) . "/Objects/Issuers.php";
-require_once dirname(__FILE__) . "/Objects/Gateways.php";
+
+namespace MultiSafepay\PrestaShop\models\Api;
+
+use MultiSafepay\PrestaShop\models\Api\Objects\Orders;
+use MultiSafepay\PrestaShop\models\Api\Objects\Issuers;
+use MultiSafepay\PrestaShop\models\Api\Objects\Gateways;
 
 class MspClient
 {

@@ -29,7 +29,8 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-require(_PS_MODULE_DIR_ . '/multisafepay/helpers/Helper.php');
+use MultiSafepay\PrestaShop\helpers\Helper;
+use MultiSafepay\PrestaShop\models\Api\MspClient;
 
 class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 {

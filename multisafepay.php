@@ -28,10 +28,10 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-require(dirname(__FILE__) . '/models/Api/MspClient.php');
-require(dirname(__FILE__) . '/helpers/CheckConnection.php');
+require __DIR__ . '/vendor/autoload.php';
 
-
+use MultiSafepay\PrestaShop\helpers\CheckConnection;
+use MultiSafepay\PrestaShop\models\Api\MspClient;
 use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
 
 if (!defined('_PS_VERSION_')) {
@@ -1269,7 +1269,7 @@ class Multisafepay extends PaymentModule
 
     protected function checkApiKey()
     {
-        $Check = new CheckAPI();
+        $Check = new CheckConnection();
         $error = $Check->myConnection(Tools::getValue('MULTISAFEPAY_API_KEY'), Tools::getValue('MULTISAFEPAY_ENVIRONMENT'));
 
         return $error;

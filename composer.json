@@ -2,11 +2,17 @@
   "name": "multisafepay/prestashop",
   "description": "MultiSafepay module for PrestaShop 1.7",
   "license": "AFL - Academic Free License (AFL 3.0)",
+  "autoload": {
+    "psr-4": {
+      "MultiSafepay\\PrestaShop\\": ""
+    }
+  },
   "require": {
     "php": ">=5.6.0"
   },
   "config": {
-    "preferred-install": "dist"
+    "preferred-install": "dist",
+    "prepend-autoloader": false
   },
   "type": "prestashop-module",
   "require-dev": {

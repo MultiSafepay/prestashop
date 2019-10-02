@@ -28,7 +28,8 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-require_once dirname(__FILE__) . "/Core.php";
+
+namespace MultiSafepay\PrestaShop\models\Api\Objects;
 
 class Gateways extends Core
 {
@@ -38,7 +39,7 @@ class Gateways extends Core
 
     public function get($endpoint = 'gateways', $type = '', $body = array(), $query_string = false)
     {
-        $result = parent::get($endpoint, $type, Tools::jsonEncode($body), $query_string);
+        $result = parent::get($endpoint, $type, \Tools::jsonEncode($body), $query_string);
         $this->success = $result->success;
         $this->data = $result->data;
 
