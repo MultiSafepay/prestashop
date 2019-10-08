@@ -31,6 +31,7 @@
 require __DIR__ . '/vendor/autoload.php';
 
 use MultiSafepay\PrestaShop\helpers\CheckConnection;
+use MultiSafepay\PrestaShop\helpers\Helper;
 use MultiSafepay\PrestaShop\models\Api\MspClient;
 use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
 
@@ -175,8 +176,12 @@ class Multisafepay extends PaymentModule
 
     public function install()
     {
-        if (!parent::install() || !$this->registerHook('paymentOptions') || !$this->registerHook('paymentReturn') || !$this->registerHook('actionOrderStatusPostUpdate')
-            || !$this->registerHook('displayPDFInvoice') || !$this->registerHook('actionFrontControllerSetMedia')
+        if (!parent::install()
+            || !$this->registerHook('paymentOptions')
+            || !$this->registerHook('paymentReturn')
+            || !$this->registerHook('actionOrderStatusPostUpdate')
+            || !$this->registerHook('actionFrontControllerSetMedia')
+            || !$this->registerHook('actionOrderSlipAdd')
         ) {
             return false;
         }
@@ -1331,5 +1336,220 @@ class Multisafepay extends PaymentModule
         }
 
         return $gateways;
+    }
+
+    /**
+     * @param array $params
+     * @return bool
+     */
+    public function hookActionOrderSlipAdd($params = [])
+    {
+        if ($params['order']->module !== 'multisafepay') {
+            return false;
+        }
+        if (!isset($_REQUEST['partialRefundProductQuantity'])) {
+            $this->context->controller->errors[] = $this->l(
+                'Partial refund was successfully created, but failed to partially refund at MultiSafepay: 
+                 Currently we only support refunds by quantity.'
+            );
+            return false;
+        }
+
+        try {
+            $this->partialRefundButton($params);
+        } catch (\Exception $e) {
+            $this->context->controller->errors[] = $this->l(
+                'Partial refund was successfully created, but failed to partially refund at MultiSafepay: '.
+                $e->getMessage()
+            );
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array $params
+     * @throws Exception
+     */
+    public function partialRefundButton($params = [])
+    {
+        if (!$this->validateParams($params)) {
+            throw new \Exception('The given data did not pass the validation');
+        }
+
+        $order = $params['order'];
+        $productList = $params['productList'];
+
+        $multiSafepay = new MspClient();
+        $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
+        $multiSafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
+        $transaction = $multiSafepay->orders->get('orders', $order->id_cart);
+
+        $gateway = $transaction->payment_details->type;
+
+        if (in_array($gateway, ['KLANA', 'PAYAFTER', 'EINVOICE', 'AFTERPAY'])) {
+            $refundArray = $this->getComplexRefundArrayData($order, $productList);
+        } else {
+            $refundArray = $this->getSimpleRefundArrayData($order, $productList);
+        }
+
+        $refundArray['description'] = 'Refund for order ' . $order->id_cart;
+
+        $multiSafepay->orders->post($refundArray, 'orders/'.$order->id_cart.'/refunds');
+        $result = $multiSafepay->orders->getResult();
+
+        if (!$result->success) {
+            throw new Exception($result->error_code .' : ' . $result->error_info);
+        }
+    }
+
+    /**
+     * @param Order $order
+     * @param array $productList
+     * @return mixed
+     * @throws Exception
+     */
+    public function getSimpleRefundArrayData(Order $order, $productList = [])
+    {
+        $currency = new Currency($order->id_currency);
+        $refund['currency'] = $currency->iso_code;
+        $refund['amount'] = $this->getRefundSimpleAmount($productList);
+        $refund['amount'] += $this->getRefundShippingAmount();
+        $refund['amount'] = round($refund['amount'] * 100);
+
+        return $refund;
+    }
+
+    /**
+     * @param Order $order
+     * @param array $productList
+     * @return array
+     * @throws Exception
+     */
+    public function getComplexRefundArrayData(Order $order, $productList = [])
+    {
+        $multisafepay = new MspClient();
+        $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
+        $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
+
+        $multisafepayOrder = $multisafepay->orders->get($endpoint = 'orders', $order->id_cart, $body = array(), $query_string = false);
+        $originalCart = $multisafepayOrder->shopping_cart;
+        $refundData = [];
+
+        foreach ($originalCart->items as $item) {
+            // Add original invoiced items
+            $refundData['checkout_data']['items'][] = $item;
+
+            // Add current items being refunded
+            foreach ($productList as $productId => $productData) {
+                $product = $order->getProducts()[$productId];
+                $merchant_item_id = "{$product['id_product']}-{$product['product_attribute_id']}";
+
+                if ($item->merchant_item_id === $merchant_item_id) {
+                    if ((float)$item->unit_price !== (float)$product['unit_price_tax_excl']) {
+                        throw new Exception('Custom amount for products is currently not supported');
+                    }
+
+                    $refundData['checkout_data']['items'][] = $this->getRefundOrderLine($item, $productData['quantity']);
+                }
+            }
+
+            // Add shipping costs
+            if ($item->merchant_item_id === 'msp-shipping') {
+                if (!$this->isRefundedAmountAllowed($order)) {
+                    throw new Exception('Custom shipping amount not supported for pay after orders');
+                }
+                if ($this->getRefundShippingAmount() > 0) {
+                    $refundData['checkout_data']['items'][] = $this->getRefundOrderLine($item, 1);
+                }
+            }
+        }
+
+        return $refundData;
+    }
+
+    /**
+     * @param array $params
+     * @return bool
+     */
+    private function validateParams($params = [])
+    {
+        if (!isset($params['order']) && !$params['order'] instanceof Order) {
+            return false;
+        }
+
+        if (!isset($params['productList']) && is_array($params['productList'])) {
+            return false;
+        }
+
+        if (!isset($params['qtyList']) && is_array($params['qtyList'])) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array $productList
+     * @return int|mixed
+     * @throws Exception
+     */
+    private function getRefundSimpleAmount($productList = [])
+    {
+        $refund_amount = 0;
+        foreach ($productList as $productListItem) {
+            $orderDetail = new OrderDetail((int) $productListItem['id_order_detail']);
+
+            if ((float) $productListItem['amount'] !== (float) $orderDetail->unit_price_tax_incl * $productListItem['quantity']) {
+                throw new Exception('Custom amount for products is currently not supported');
+            }
+            $refund_amount += $productListItem['amount'];
+        }
+        return $refund_amount;
+    }
+
+    /**
+     * @return float
+     */
+    private function getRefundShippingAmount()
+    {
+        return (float) str_replace(',', '.', Tools::getValue('partialRefundShippingCost'));
+    }
+
+    /**
+     * @param $item
+     * @param $quantity
+     * @return stdclass
+     */
+    private function getRefundOrderLine($item, $quantity)
+    {
+        $refundItem = new \stdclass();
+        $refundItem->name = $item->name;
+        $refundItem->description = $item->description;
+        $refundItem->unit_price = 0 - $item->unit_price;
+        $refundItem->quantity = $quantity;
+        $refundItem->merchant_item_id = $item->merchant_item_id;
+        $refundItem->tax_table_selector = $item->tax_table_selector;
+
+        return $refundItem;
+    }
+
+    /**
+     * @param Order $order
+     * @return bool
+     */
+    private function isRefundedAmountAllowed(Order $order)
+    {
+        $refundAmount = (float)$this->getRefundShippingAmount();
+
+        if ($refundAmount === (float)0) {
+            return true;
+        }
+
+        if ($refundAmount === (float)$order->total_shipping) {
+            return true;
+        }
+
+        return false;
     }
 }
