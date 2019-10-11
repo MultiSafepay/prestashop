@@ -902,9 +902,6 @@ class Multisafepay extends PaymentModule
             return;
         }
 
-
-
-
         $payment_options = array();
 
         // loop through the available MultiSafepay gateways
@@ -919,14 +916,14 @@ class Multisafepay extends PaymentModule
                 $id_country     = $billing->id_country;
                 $id_currency    = $params['cart']->id_currency;
                 $carrier        = new Carrier((int) $params['cart']->id_carrier);
-                $id_shop_group  = $params['cart']->id_shop_group;
+                $id_customer_group  = Group::getCurrent()->id;
                 $amount         = $params['cart']->getOrderTotal(true, Cart::BOTH);
                 $isVirtualCart  = $params['cart']->isVirtualCart();
 
                 $carrierIdReference = $carrier->id_reference;
 
                 if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CURRENCY_' . $id_currency)   == 'on' &&
-                    Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_'    . $id_shop_group) == "on" &&
+                    Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_'    . $id_customer_group) == "on" &&
                     Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_'  . $id_country)    == 'on' &&
                    (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_'  . $carrierIdReference)    == 'on' || $isVirtualCart) ) {
                     $active = true;
@@ -1038,7 +1035,7 @@ class Multisafepay extends PaymentModule
                 $id_country     = $billing->id_country;
                 $id_currency    = $params['cart']->id_currency;
                 $carrier        = new Carrier((int) $params['cart']->id_carrier);
-                $id_shop_group  = $params['cart']->id_shop_group;
+                $id_customer_group  = Group::getCurrent()->id;
                 $amount         = $params['cart']->getOrderTotal(true, Cart::BOTH);
                 $isVirtualCart  = $params['cart']->isVirtualCart();
 
@@ -1046,7 +1043,7 @@ class Multisafepay extends PaymentModule
 
 
                 if (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CURRENCY_' . $id_currency) == 'on' &&
-                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_'    . $id_shop_group) == "on" &&
+                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_'    . $id_customer_group) == "on" &&
                     Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_' . $id_country) == 'on' &&
                    (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrierIdReference) == 'on' || $isVirtualCart) ) {
                     $active = true;
