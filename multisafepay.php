@@ -182,6 +182,7 @@ class Multisafepay extends PaymentModule
             || !$this->registerHook('actionOrderStatusPostUpdate')
             || !$this->registerHook('actionFrontControllerSetMedia')
             || !$this->registerHook('actionOrderSlipAdd')
+            || !$this->registerHook('displayPDFInvoice')
         ) {
             return false;
         }
@@ -256,6 +257,10 @@ class Multisafepay extends PaymentModule
         }
 
         $message = json_decode($order->getFirstMessage());
+
+        if (empty($message)) {
+            return;
+        }
 
         $invoiceBankDetails = '<table>';
         $invoiceBankDetails .= '<tr><td colspan="2"><strong>' . $this->l('Payment information') . '</strong></td></tr>';
