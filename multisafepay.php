@@ -1476,6 +1476,11 @@ class Multisafepay extends PaymentModule
      */
     private function validateParams($params = [])
     {
+        // We do not refund when order contains discounts
+        if (Tools::getValue('order_discount_price')) {
+            return false;
+        }
+
         if (!isset($params['order']) && !$params['order'] instanceof Order) {
             return false;
         }
