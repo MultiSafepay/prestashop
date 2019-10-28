@@ -560,7 +560,7 @@ class Multisafepay extends PaymentModule
             }
 
             foreach ($this->groups as $group) {
-                if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $group['id_group']) == "on") {
+                if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $group['id_group']) == 'on') {
                     $this->gateways[$key]['group'][$group['id_group']] = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $group['id_group']);
                 }
             }
@@ -909,31 +909,40 @@ class Multisafepay extends PaymentModule
 
         $payment_options = array();
 
+        $groups = [];
+        if (isset($this->context->customer)) {
+            $groups = $this->context->customer->getGroups();
+        }
+
+        $billing        = new Address($this->context->cart->id_address_invoice);
+        $id_country     = $billing->id_country;
+        $id_currency    = $params['cart']->id_currency;
+        $carrier        = new Carrier((int) $params['cart']->id_carrier);
+        $carrierIdReference = $carrier->id_reference;
+
+        $amount         = $params['cart']->getOrderTotal(true, Cart::BOTH);
+        $isVirtualCart  = $params['cart']->isVirtualCart();
+
         // loop through the available MultiSafepay gateways
         foreach ($this->gateways as $gateway) {
             if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway['code']) == 1) {
                 $active = false;
 
-                /*
-                 *  start restrictions
-                 */
-                $billing        = new Address($this->context->cart->id_address_invoice);
-                $id_country     = $billing->id_country;
-                $id_currency    = $params['cart']->id_currency;
-                $carrier        = new Carrier((int) $params['cart']->id_carrier);
-                $id_customer_group  = Group::getCurrent()->id;
-                $amount         = $params['cart']->getOrderTotal(true, Cart::BOTH);
-                $isVirtualCart  = $params['cart']->isVirtualCart();
-
-                $carrierIdReference = $carrier->id_reference;
-
-                if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CURRENCY_' . $id_currency)   == 'on' &&
-                    Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_'    . $id_customer_group) == "on" &&
-                    Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_'  . $id_country)    == 'on' &&
-                   (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_'  . $carrierIdReference)    == 'on' || $isVirtualCart) ) {
-                    $active = true;
+                $activeGroup = false;
+                foreach ($groups as $group) {
+                    if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $group) == 'on') {
+                        $activeGroup = true;
+                        break;
+                    }
                 }
 
+                if ($activeGroup === true &&
+                    Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CURRENCY_' . $id_currency) == 'on' &&
+                    Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_'  . $id_country) == 'on' &&
+                   (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_'  . $carrierIdReference) == 'on' || $isVirtualCart)
+                    ) {
+                    $active = true;
+                }
 
                 $min_amount = floatval(Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MIN_AMOUNT'));
                 $max_amount = floatval(Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MAX_AMOUNT'));
@@ -941,13 +950,6 @@ class Multisafepay extends PaymentModule
                 if ((!empty($min_amount) && $amount < $min_amount) || (!empty($max_amount) && $amount > $max_amount)) {
                     $active = false;
                 }
-
-                /*
-                 *  end restrictions
-                 */
-
-
-
 
                 if ($active) {
                     if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_TITLE')) {
@@ -1032,31 +1034,21 @@ class Multisafepay extends PaymentModule
                     $locale = "en_GB";
                 }
 
-
-                /*
-                 *  start restrictions
-                 */
-                $billing = new Address($this->context->cart->id_address_invoice);
-                $id_country     = $billing->id_country;
-                $id_currency    = $params['cart']->id_currency;
-                $carrier        = new Carrier((int) $params['cart']->id_carrier);
-                $id_customer_group  = Group::getCurrent()->id;
-                $amount         = $params['cart']->getOrderTotal(true, Cart::BOTH);
-                $isVirtualCart  = $params['cart']->isVirtualCart();
-
-                $carrierIdReference = $carrier->id_reference;
-
-
-                if (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CURRENCY_' . $id_currency) == 'on' &&
-                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_'    . $id_customer_group) == "on" &&
-                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_' . $id_country) == 'on' &&
-                   (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrierIdReference) == 'on' || $isVirtualCart) ) {
-                    $active = true;
+                $activeGroup = false;
+                foreach ($groups as $group) {
+                    if (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $gateway["code"] . '_GROUP_' . $group) == 'on') {
+                        $activeGroup = true;
+                        break;
+                    }
                 }
 
-                /*
-                 *  end restrictions
-                 */
+                if ($activeGroup === true &&
+                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $gateway["code"] . '_CURRENCY_' . $id_currency) == 'on' &&
+                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $gateway["code"] . '_COUNTRY_'  . $id_country) == 'on' &&
+                    (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $gateway["code"] . '_CARRIER_'  . $carrierIdReference) == 'on' || $isVirtualCart)
+                    ) {
+                    $active = true;
+                }
 
                 if ($active) {
                     $newOption = new PaymentOption();
