@@ -152,8 +152,6 @@ class Multisafepay extends PaymentModule
             }
         }
 
-
-
         /*
          * Sort the giftcards based by provided sort order configuration value
          */
@@ -251,26 +249,16 @@ class Multisafepay extends PaymentModule
     {
         $invoice = $params['object'];
         $order = new Order($invoice->id_order);
+        $bankDetails = '';
 
-        if ($order->payment !== 'Bank transfer') {
-            return;
+        $helper = new Helper;
+        if ($order->payment === $helper->getPaymentMethod('banktrans')) {
+            $bankDetails = $this->getInvoiceBankDetails($order->id);
         }
 
-        $message = json_decode($order->getFirstMessage());
-
-        if (empty($message)) {
-            return;
-        }
-
-        $invoiceBankDetails = '<table>';
-        $invoiceBankDetails .= '<tr><td colspan="2"><strong>' . $this->l('Payment information') . '</strong></td></tr>';
-        $invoiceBankDetails .= '<tr><td>' . $this->l('Name') . ':</td><td>' . $message->destination_holder_name . '</td></tr>';
-        $invoiceBankDetails .= '<tr><td>' . $this->l('IBAN') . ':</td><td>' . $message->destination_holder_iban . '</td></tr>';
-        $invoiceBankDetails .= '<tr><td>' . $this->l('Reference number') . ':</td><td>' . $message->reference . '</td></tr>';
-        $invoiceBankDetails .= '</table>';
-
-        return $invoiceBankDetails;
+        return $bankDetails;
     }
+
 
     public function hookActionFrontControllerSetMedia()
     {
@@ -1550,5 +1538,31 @@ class Multisafepay extends PaymentModule
         }
 
         return false;
+    }
+
+
+    /**
+     * @param $orderId
+     * @return string
+     */
+    private function getInvoiceBankDetails($orderId)
+    {
+        $invoiceBankDetails = '';
+
+        $helper = new Helper;
+        $message = $helper->getCustomerMessage($orderId, 'destination_holder_name');
+
+        if ($message) {
+            $bankDetails = json_decode($message);
+
+            $invoiceBankDetails = '<table>';
+            $invoiceBankDetails .= '<tr><td colspan="2"><strong>' . $this->l('Payment information') . '</strong></td></tr>';
+            $invoiceBankDetails .= '<tr><td>' . $this->l('Name') . ':</td><td>' . $bankDetails->destination_holder_name . '</td></tr>';
+            $invoiceBankDetails .= '<tr><td>' . $this->l('IBAN') . ':</td><td>' . $bankDetails->destination_holder_iban . '</td></tr>';
+            $invoiceBankDetails .= '<tr><td>' . $this->l('Reference number') . ':</td><td>' . $bankDetails->reference . '</td></tr>';
+            $invoiceBankDetails .= '</table>';
+        }
+
+        return $invoiceBankDetails;
     }
 }

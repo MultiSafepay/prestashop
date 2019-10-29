@@ -66,4 +66,25 @@ class Helper extends \Module
         $msg->id_cart = (int)$cartId;
         $msg->add();
     }
+
+
+    /**
+     * @param $orderId
+     * @param $searchString
+     * @return string
+     */
+    public function getCustomerMessage($orderId, $searchString)
+    {
+        $result = '';
+        $customerMessage = new \CustomerMessageCore();
+        $messages = $customerMessage->getMessagesByOrderId($orderId);
+
+        foreach ($messages as $message) {
+            if (strpos($message['message'], $searchString)) {
+                $result = $message['message'];
+                break;
+            }
+        }
+        return $result;
+    }
 }
