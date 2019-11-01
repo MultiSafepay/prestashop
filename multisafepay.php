@@ -1329,21 +1329,23 @@ class Multisafepay extends PaymentModule
         if ($params['order']->module !== 'multisafepay') {
             return false;
         }
-        if (!isset($_REQUEST['partialRefundProductQuantity'])) {
-            $this->context->controller->errors[] = $this->l(
-                'Partial refund was successfully created, but failed to partially refund at MultiSafepay: 
-                 Currently we only support refunds by quantity.'
-            );
+
+        if ($this->getRefundMethod() !== 'partialRefundProductQuantity') {
+            $message = $this->l('Partial refund was successfully created, but failed to partially refund at MultiSafepay');
+            $message .= ': ';
+            $message .= $this->l('We currently do not support that method of refunding. The method we do support is \'Partial refund\'');
+
+            $this->context->controller->errors[] = $message;
             return false;
         }
 
         try {
             $this->partialRefundButton($params);
         } catch (\Exception $e) {
-            $this->context->controller->errors[] = $this->l(
-                'Partial refund was successfully created, but failed to partially refund at MultiSafepay: '.
-                $e->getMessage()
-            );
+            $message = $this->l('Partial refund was successfully created, but failed to partially refund at MultiSafepay');
+            $message .= ': ' . $e->getMessage();
+            $this->context->controller->errors[] = $message;
+            return false;
         }
 
         return true;
@@ -1564,5 +1566,27 @@ class Multisafepay extends PaymentModule
         }
 
         return $invoiceBankDetails;
+    }
+
+    /**
+     * Get the name of the refund method
+     *
+     * @return string|null
+     */
+    public function getRefundMethod()
+    {
+        if (array_sum(Tools::getValue('cancelQuantity'))) {
+            return 'cancelQuantity';
+        }
+
+        if (array_sum(Tools::getValue('partialRefundProductQuantity'))) {
+            return 'partialRefundProductQuantity';
+        }
+
+        if (array_sum(Tools::getValue('partialRefundProduct'))) {
+            return 'partialRefundProduct';
+        }
+
+        return null;
     }
 }
