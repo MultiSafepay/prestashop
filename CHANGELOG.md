@@ -1,3 +1,19 @@
+## 4.5.0-RC1
+Release date: November 12th, 2019
+
+### Added
++ PLGPRSS17-17: Add refund support within PrestaShop
++ PLGPRSS17-45: Add Bank transfer details to PrestaShop invoices
++ PLGPRSS17-49: Add PSR-4 namespaces
+
+### Changed
++ PLGPRSS17-21: Set order to status shipped for all payment methods
+
+### Fixed
++ PLGPRSS17-64: Fix groups restrictions for payment methods and gift cards
++ PLGPRSS17-44: Fix issue where a free gift was not recognized as free
++ PLGPRSS17-30: Fix notifications returning HTTP 302
+
 ## 4.4.0
 Release date: July 3rd, 2019
 
