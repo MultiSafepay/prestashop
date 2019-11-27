@@ -1328,6 +1328,11 @@ class Multisafepay extends PaymentModule
      */
     public function hookActionOrderSlipAdd($params = [])
     {
+        // Do not refund at MultiSafepay when vouchers are generated
+        if (Tools::isSubmit('generateDiscountRefund')) {
+            return false;
+        }
+
         if ($params['order']->module !== 'multisafepay') {
             return false;
         }
