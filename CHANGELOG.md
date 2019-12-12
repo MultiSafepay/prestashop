@@ -1,5 +1,5 @@
-## 4.5.0-RC1
-Release date: November 12th, 2019
+## 4.5.0
+Release date: December 12th, 2019
 
 ### Added
 + PLGPRSS17-17: Add refund support within PrestaShop
