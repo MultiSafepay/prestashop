@@ -28,9 +28,12 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-require_once dirname(__FILE__) . "/Objects/Orders.php";
-require_once dirname(__FILE__) . "/Objects/Issuers.php";
-require_once dirname(__FILE__) . "/Objects/Gateways.php";
+
+namespace MultiSafepay\PrestaShop\models\Api;
+
+use MultiSafepay\PrestaShop\models\Api\Objects\Orders;
+use MultiSafepay\PrestaShop\models\Api\Objects\Issuers;
+use MultiSafepay\PrestaShop\models\Api\Objects\Gateways;
 
 class MspClient
 {
@@ -75,7 +78,7 @@ class MspClient
         return $this->api_key;
     }
 
-    public function processAPIRequest($http_method, $api_method, $http_body = NULL)
+    public function processAPIRequest($http_method, $api_method, $http_body = null)
     {
 
         $url = $this->api_url . $api_method;
@@ -86,7 +89,7 @@ class MspClient
             "api_key:" . $this->api_key,
         );
 
-        if ($http_body !== NULL) {
+        if ($http_body !== null) {
             $request_headers[] = "Content-Type: application/json";
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $http_body);
@@ -114,5 +117,4 @@ class MspClient
         curl_close($ch);
         return $body;
     }
-
 }

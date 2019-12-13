@@ -30,3 +30,9 @@ For additional information or instructions please see our [installation & config
  
 ## Support
 You can create issues on our repository. If you need any additional help or support, please contact <a href="mailto:integration@multisafepay.com">integration@multisafepay.com</a>
+
+## Refund within PrestaShop 
+In version 4.5.0 we've added support for refunding from within Prestashop 1.7.
+The way you refund is by opening an order and then clicking on 'partial refund', after which you fill in the amount and quantity you want to refund.
+After clicking on the Refund button, the requested refund is sent and processed automatically within MultiSafepay Control.
+The refund in this version is limited to partial refund on orders without discounts which have not been paid with Pay After Delivery, Klarna, E-Invoice or Afterpay

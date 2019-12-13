@@ -28,10 +28,11 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-require(dirname(__FILE__) . '/models/Api/MspClient.php');
-require(dirname(__FILE__) . '/helpers/CheckConnection.php');
+require __DIR__ . '/vendor/autoload.php';
 
-
+use MultiSafepay\PrestaShop\helpers\CheckConnection;
+use MultiSafepay\PrestaShop\helpers\Helper;
+use MultiSafepay\PrestaShop\models\Api\MspClient;
 use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
 
 if (!defined('_PS_VERSION_')) {
@@ -115,7 +116,7 @@ class Multisafepay extends PaymentModule
     {
         $this->name = 'multisafepay';
         $this->tab = 'payments_gateways';
-        $this->version = '4.4.0';
+        $this->version = '4.5.0';
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
         $this->author = 'MultiSafepay';
         $this->controllers = array('validation', 'payment');
@@ -139,7 +140,7 @@ class Multisafepay extends PaymentModule
             $this->gateways[$i]['sort'] = (int) Configuration::get('MULTISAFEPAY_GATEWAY_' . $this->gateways[$i]['code'] . '_SORT');
         }
 
-        usort($this->gateways, function($a, $b) {
+        usort($this->gateways, function ($a, $b) {
             return $a['sort'] - $b['sort'];
         });
 
@@ -151,8 +152,6 @@ class Multisafepay extends PaymentModule
             }
         }
 
-
-
         /*
          * Sort the giftcards based by provided sort order configuration value
          */
@@ -160,7 +159,7 @@ class Multisafepay extends PaymentModule
             $this->giftcards[$i]['sort'] = (int) Configuration::get('MULTISAFEPAY_GIFTCARD_' . $this->giftcards[$i]['code'] . '_SORT');
         }
 
-        usort($this->giftcards, function($a, $b) {
+        usort($this->giftcards, function ($a, $b) {
             return $a['sort'] - $b['sort'];
         });
 
@@ -175,8 +174,13 @@ class Multisafepay extends PaymentModule
 
     public function install()
     {
-        if (!parent::install() || !$this->registerHook('paymentOptions') || !$this->registerHook('paymentReturn') || !$this->registerHook('actionOrderStatusPostUpdate')
+        if (!parent::install()
+            || !$this->registerHook('paymentOptions')
+            || !$this->registerHook('paymentReturn')
+            || !$this->registerHook('actionOrderStatusPostUpdate')
             || !$this->registerHook('actionFrontControllerSetMedia')
+            || !$this->registerHook('actionOrderSlipAdd')
+            || !$this->registerHook('displayPDFInvoice')
         ) {
             return false;
         }
@@ -237,6 +241,25 @@ class Multisafepay extends PaymentModule
     }
 
 
+    /**
+     * @param $params
+     * @return string
+     */
+    public function hookDisplayPDFInvoice($params)
+    {
+        $invoice = $params['object'];
+        $order = new Order($invoice->id_order);
+        $bankDetails = '';
+
+        $helper = new Helper;
+        if ($order->payment === $helper->getPaymentMethod('banktrans')) {
+            $bankDetails = $this->getInvoiceBankDetails($order->id);
+        }
+
+        return $bankDetails;
+    }
+
+
     public function hookActionFrontControllerSetMedia()
     {
         $this->context->controller->addJS($this->_path . 'views/js/multisafepay_front.js');
@@ -292,6 +315,9 @@ class Multisafepay extends PaymentModule
         $this->unregisterHook('paymentReturn');
         $this->unregisterHook('actionOrderStatusPostUpdate');
         $this->unregisterHook('actionFrontControllerSetMedia');
+        $this->unregisterHook('displayPDFInvoice');
+        $this->unregisterHook('actionOrderSlipAdd');
+
 
         Configuration::deleteByName('MULTISAFEPAY_API_KEY');
         Configuration::deleteByName('MULTISAFEPAY_DEBUG');
@@ -303,31 +329,25 @@ class Multisafepay extends PaymentModule
         return parent::uninstall();
     }
 
+    /**
+     * @param $params
+     */
     public function hookActionOrderStatusPostUpdate($params)
     {
-        if ($params['newOrderStatus']->id == Configuration::get('PS_OS_SHIPPING')) {
-            $order = new Order(Order::getOrderByCartId($params['cart']->id));
-            if ($order->payment == 'KLARNA' ||
-                    $order->payment == 'PAYAFTER' ||
-                    $order->payment == 'EINVOICE' ||
-                    $order->payment == 'AFTERPAY' ||
-                    $order->payment == 'SANTANDER'
-                ) {
-                $carrier = new Carrier((int) $params['cart']->id_carrier);
+        if ($params['newOrderStatus']->id === Configuration::get('PS_OS_SHIPPING')) {
+            $carrier = new Carrier((int)$params['cart']->id_carrier);
+            $shipData = array(
+                'tracktrace_code' => '',
+                'carrier' => $carrier->name,
+                'ship_date' => date('Y-m-d H:i:s'),
+                'reason' => 'Shipped'
+            );
+            $endpoint = 'orders/' . $params['cart']->id;
 
-                $multisafepay = new MspClient();
-                $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
-                $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
-
-                $endpoint = 'orders/' . $params['cart']->id;
-                $ship_data = array(
-                    "tracktrace_code" => '',
-                    "carrier" => $carrier->name,
-                    "ship_date" => date('Y-m-d H:i:s'),
-                    "reason" => 'Shipped'
-                );
-                $multisafepay->orders->patch($ship_data, $endpoint);
-            }
+            $multisafepay = new MspClient();
+            $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
+            $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
+            $multisafepay->orders->patch($shipData, $endpoint);
         }
     }
 
@@ -421,10 +441,9 @@ class Multisafepay extends PaymentModule
         $postMessages['warnings'] = array();
 
 
-        if ( Tools::isSubmit('btnSubmit') &&
-            ( Configuration::get('MULTISAFEPAY_ENVIRONMENT') != Tools::getValue('MULTISAFEPAY_ENVIRONMENT') ||
-              Configuration::get('MULTISAFEPAY_API_KEY')     != Tools::getValue('MULTISAFEPAY_API_KEY') ) ) {
-
+        if (Tools::isSubmit('btnSubmit') &&
+            (Configuration::get('MULTISAFEPAY_ENVIRONMENT') != Tools::getValue('MULTISAFEPAY_ENVIRONMENT') ||
+              Configuration::get('MULTISAFEPAY_API_KEY')     != Tools::getValue('MULTISAFEPAY_API_KEY'))) {
             $postMessages['errors'] = $this->checkApiKey();
             return $postMessages;
         }
@@ -434,7 +453,7 @@ class Multisafepay extends PaymentModule
             return $postMessages;
         }
 
-         if (Tools::isSubmit('btnGiftcardsSubmit')) {
+        if (Tools::isSubmit('btnGiftcardsSubmit')) {
             $postMessages['warnings'] = $this->getActiveGiftcards();
             return $postMessages;
         }
@@ -531,7 +550,7 @@ class Multisafepay extends PaymentModule
             }
 
             foreach ($this->groups as $group) {
-                if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $group['id_group']) == "on") {
+                if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $group['id_group']) == 'on') {
                     $this->gateways[$key]['group'][$group['id_group']] = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $group['id_group']);
                 }
             }
@@ -878,52 +897,49 @@ class Multisafepay extends PaymentModule
             return;
         }
 
-
-
-
         $payment_options = array();
+
+        $groups = [];
+        if (isset($this->context->customer)) {
+            $groups = $this->context->customer->getGroups();
+        }
+
+        $billing        = new Address($this->context->cart->id_address_invoice);
+        $id_country     = $billing->id_country;
+        $id_currency    = $params['cart']->id_currency;
+        $carrier        = new Carrier((int) $params['cart']->id_carrier);
+        $carrierIdReference = $carrier->id_reference;
+
+        $amount         = $params['cart']->getOrderTotal(true, Cart::BOTH);
+        $isVirtualCart  = $params['cart']->isVirtualCart();
 
         // loop through the available MultiSafepay gateways
         foreach ($this->gateways as $gateway) {
             if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway['code']) == 1) {
-
-
                 $active = false;
 
-                /*
-                 *  start restrictions
-                 */
-                $billing        = new Address($this->context->cart->id_address_invoice);
-                $id_country     = $billing->id_country;
-                $id_currency    = $params['cart']->id_currency;
-                $carrier        = new Carrier((int) $params['cart']->id_carrier);
-                $id_shop_group  = $params['cart']->id_shop_group;
-                $amount         = $params['cart']->getOrderTotal(true, Cart::BOTH);
-                $isVirtualCart  = $params['cart']->isVirtualCart();
+                $activeGroup = false;
+                foreach ($groups as $group) {
+                    if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_' . $group) == 'on') {
+                        $activeGroup = true;
+                        break;
+                    }
+                }
 
-                $carrierIdReference = $carrier->id_reference;
-
-                if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CURRENCY_' . $id_currency)   == 'on' &&
-                    Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_GROUP_'    . $id_shop_group) == "on" &&
-                    Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_'  . $id_country)    == 'on' &&
-                   (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_'  . $carrierIdReference)    == 'on' || $isVirtualCart) ) {
+                if ($activeGroup === true &&
+                    Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CURRENCY_' . $id_currency) == 'on' &&
+                    Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_COUNTRY_'  . $id_country) == 'on' &&
+                   (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_CARRIER_'  . $carrierIdReference) == 'on' || $isVirtualCart)
+                    ) {
                     $active = true;
                 }
 
+                $min_amount = floatval(Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MIN_AMOUNT'));
+                $max_amount = floatval(Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MAX_AMOUNT'));
 
-                $min_amount = floatval (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MIN_AMOUNT'));
-                $max_amount = floatval (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MAX_AMOUNT'));
-
-                if ( (!empty($min_amount) && $amount < $min_amount) || (!empty($max_amount) && $amount > $max_amount)) {
+                if ((!empty($min_amount) && $amount < $min_amount) || (!empty($max_amount) && $amount > $max_amount)) {
                     $active = false;
                 }
-
-                /*
-                 *  end restrictions
-                 */
-
-
-
 
                 if ($active) {
                     if (Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_TITLE')) {
@@ -1008,31 +1024,21 @@ class Multisafepay extends PaymentModule
                     $locale = "en_GB";
                 }
 
-
-                /*
-                 *  start restrictions
-                 */
-                $billing = new Address($this->context->cart->id_address_invoice);
-                $id_country     = $billing->id_country;
-                $id_currency    = $params['cart']->id_currency;
-                $carrier        = new Carrier((int) $params['cart']->id_carrier);
-                $id_shop_group  = $params['cart']->id_shop_group;
-                $amount         = $params['cart']->getOrderTotal(true, Cart::BOTH);
-                $isVirtualCart  = $params['cart']->isVirtualCart();
-
-                $carrierIdReference = $carrier->id_reference;
-
-
-                if (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CURRENCY_' . $id_currency) == 'on' &&
-                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_'    . $id_shop_group) == "on" &&
-                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_' . $id_country) == 'on' &&
-                   (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_' . $carrierIdReference) == 'on' || $isVirtualCart) ) {
-                    $active = true;
+                $activeGroup = false;
+                foreach ($groups as $group) {
+                    if (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $gateway["code"] . '_GROUP_' . $group) == 'on') {
+                        $activeGroup = true;
+                        break;
+                    }
                 }
 
-                /*
-                 *  end restrictions
-                 */
+                if ($activeGroup === true &&
+                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $gateway["code"] . '_CURRENCY_' . $id_currency) == 'on' &&
+                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $gateway["code"] . '_COUNTRY_'  . $id_country) == 'on' &&
+                    (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $gateway["code"] . '_CARRIER_'  . $carrierIdReference) == 'on' || $isVirtualCart)
+                    ) {
+                    $active = true;
+                }
 
                 if ($active) {
                     $newOption = new PaymentOption();
@@ -1059,22 +1065,20 @@ class Multisafepay extends PaymentModule
         $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
 
         if (!empty($multisafepay->getApiKey())) {
-
             $mspGateways = array_column($multisafepay->gateways->get(), 'id');
             $mspGateways = array_map('strtolower', $mspGateways);
 
             // Loop all available gateways in this plug-in
-            foreach ($this->gateways as $gateway){
-
+            foreach ($this->gateways as $gateway) {
                 // Skip connect as it is not a real gateway
-                if ($gateway["code"] == 'connect' ){
+                if ($gateway["code"] == 'connect') {
                     continue;
                 }
 
                 // check if gateway is enabled in the plug-in
-                if ( Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"]) ) {
-                    if ( !in_array( $gateway["code"], $mspGateways )) {
-                        $warnings[] = sprintf ("%s %s",  $gateway["name"], $this->l('Is not activated in your Multisafepay account'));
+                if (Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"])) {
+                    if (!in_array($gateway["code"], $mspGateways)) {
+                        $warnings[] = sprintf("%s %s", $gateway["name"], $this->l('Is not activated in your Multisafepay account'));
                     }
                 }
             }
@@ -1092,17 +1096,15 @@ class Multisafepay extends PaymentModule
         $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
 
         if (!empty($multisafepay->getApiKey())) {
-
             $mspGateways = array_column($multisafepay->gateways->get(), 'id');
             $mspGateways = array_map('strtolower', $mspGateways);
 
             // Loop all available gateways in this plug-in
-            foreach ($this->giftcards as $giftcard){
-
+            foreach ($this->giftcards as $giftcard) {
                 // check if giftcards is enabled in the plug-in
-                if ( Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"]) ) {
-                    if ( !in_array( $giftcard["code"], $mspGateways )) {
-                        $warnings[] = sprintf ("%s %s",  $giftcard["name"], $this->l('Is not activated in your Multisafepay account'));
+                if (Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"])) {
+                    if (!in_array($giftcard["code"], $mspGateways)) {
+                        $warnings[] = sprintf("%s %s", $giftcard["name"], $this->l('Is not activated in your Multisafepay account'));
                     }
                 }
             }
@@ -1181,7 +1183,7 @@ class Multisafepay extends PaymentModule
             'phone'             => $this->getPhoneNumber(),
             'bankaccount'       => '',
 
-            'terms'             => sprintf ( $this->l('By confirming this order you agree with the %s Terms and Conditions %s of MultiFactor'),  '<a href="https://www.multifactor.nl/voorwaarden/betalingsvoorwaarden-consument/" target="_blank">' , '</a>')
+            'terms'             => sprintf($this->l('By confirming this order you agree with the %s Terms and Conditions %s of MultiFactor'), '<a href="https://www.multifactor.nl/voorwaarden/betalingsvoorwaarden-consument/" target="_blank">', '</a>')
 
         ]);
 
@@ -1204,7 +1206,7 @@ class Multisafepay extends PaymentModule
             'phone'             => $this->getPhoneNumber(),
             'bankaccount'       => '',
 
-            'terms'             => sprintf ( $this->l('By confirming this order you agree with the %s Terms and Conditions %s of MultiFactor'),  '<a href="https://www.multifactor.nl/voorwaarden/betalingsvoorwaarden-consument/" target="_blank">' , '</a>')
+            'terms'             => sprintf($this->l('By confirming this order you agree with the %s Terms and Conditions %s of MultiFactor'), '<a href="https://www.multifactor.nl/voorwaarden/betalingsvoorwaarden-consument/" target="_blank">', '</a>')
 
         ]);
 
@@ -1256,8 +1258,8 @@ class Multisafepay extends PaymentModule
 
     protected function checkApiKey()
     {
-        $Check = new CheckAPI();
-        $error = $Check->myConnection( Tools::getValue('MULTISAFEPAY_API_KEY'), Tools::getValue('MULTISAFEPAY_ENVIRONMENT'));
+        $Check = new CheckConnection();
+        $error = $Check->myConnection(Tools::getValue('MULTISAFEPAY_API_KEY'), Tools::getValue('MULTISAFEPAY_ENVIRONMENT'));
 
         return $error;
     }
@@ -1320,4 +1322,186 @@ class Multisafepay extends PaymentModule
         return $gateways;
     }
 
+    /**
+     * @param array $params
+     * @return bool
+     */
+    public function hookActionOrderSlipAdd($params = [])
+    {
+        // Do not refund at MultiSafepay when vouchers are generated
+        if (Tools::isSubmit('generateDiscountRefund')) {
+            return false;
+        }
+
+        if ($params['order']->module !== 'multisafepay') {
+            return false;
+        }
+
+        $refundMethod = $this->getRefundMethod();
+
+        if ($refundMethod === 'cancelQuantity' || $refundMethod === null) {
+            $message = $this->l('Partial refund was successfully created, but failed to partially refund at MultiSafepay');
+            $message .= ': ';
+            $message .= $this->l('We currently do not support that method of refunding. The method we do support is \'Partial refund\'');
+
+            $this->context->controller->errors[] = $message;
+            return false;
+        }
+
+        try {
+            $this->partialRefundButton($params);
+        } catch (\Exception $e) {
+            $message = $this->l('Partial refund was successfully created, but failed to partially refund at MultiSafepay');
+            $message .= ': ' . $e->getMessage();
+            $this->context->controller->errors[] = $message;
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array $params
+     * @throws Exception
+     */
+    public function partialRefundButton($params = [])
+    {
+        $order = $params['order'];
+        $productList = $params['productList'];
+
+        $multiSafepay = new MspClient();
+        $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
+        $multiSafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
+        $transaction = $multiSafepay->orders->get('orders', $order->id_cart);
+        $params['gateway'] = $transaction->payment_details->type;
+
+        if (!$this->validateParams($params)) {
+            throw new \Exception('The given data did not pass the validation');
+        }
+
+        $refundArray['description'] = 'Refund for order ' . $order->id_cart;
+        $refundArray = $this->getSimpleRefundArrayData($order, $productList);
+
+        $multiSafepay->orders->post($refundArray, 'orders/'.$order->id_cart.'/refunds');
+        $result = $multiSafepay->orders->getResult();
+
+        if (!$result->success) {
+            throw new Exception($result->error_code .' : ' . $result->error_info);
+        }
+    }
+
+    /**
+     * @param Order $order
+     * @param array $productList
+     * @return mixed
+     * @throws Exception
+     */
+    public function getSimpleRefundArrayData(Order $order, $productList = [])
+    {
+        $currency = new Currency($order->id_currency);
+        $refund['currency'] = $currency->iso_code;
+        $refund['amount'] = $this->getRefundSimpleAmount($productList);
+        $refund['amount'] += $this->getRefundShippingAmount();
+        $refund['amount'] = round($refund['amount'] * 100);
+
+        return $refund;
+    }
+
+    /**
+     * @param array $params
+     * @return bool
+     */
+    private function validateParams($params = [])
+    {
+        // We do not refund when order contains discounts
+        if (Tools::getValue('order_discount_price')) {
+            return false;
+        }
+        if (in_array($params['gateway'], ['KLARNA', 'PAYAFTER', 'EINVOICE', 'AFTERPAY'])) {
+            return false;
+        }
+
+        if (!isset($params['order']) && !$params['order'] instanceof Order) {
+            return false;
+        }
+
+        if (!isset($params['productList']) && is_array($params['productList'])) {
+            return false;
+        }
+
+        if (!isset($params['qtyList']) && is_array($params['qtyList'])) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array $productList
+     * @return int|mixed
+     * @throws Exception
+     */
+    private function getRefundSimpleAmount($productList = [])
+    {
+        $refund_amount = 0;
+        foreach ($productList as $productListItem) {
+            $refund_amount += $productListItem['amount'];
+        }
+        return $refund_amount;
+    }
+
+    /**
+     * @return float
+     */
+    private function getRefundShippingAmount()
+    {
+        return (float) str_replace(',', '.', Tools::getValue('partialRefundShippingCost'));
+    }
+
+    /**
+     * @param $orderId
+     * @return string
+     */
+    private function getInvoiceBankDetails($orderId)
+    {
+        $invoiceBankDetails = '';
+
+        $helper = new Helper;
+        $message = $helper->getCustomerMessage($orderId, 'destination_holder_name');
+
+        if ($message) {
+            $bankDetails = json_decode($message);
+
+            $invoiceBankDetails = '<table>';
+            $invoiceBankDetails .= '<tr><td colspan="2"><strong>' . $this->l('Payment information') . '</strong></td></tr>';
+            $invoiceBankDetails .= '<tr><td>' . $this->l('Name') . ':</td><td>' . $bankDetails->destination_holder_name . '</td></tr>';
+            $invoiceBankDetails .= '<tr><td>' . $this->l('IBAN') . ':</td><td>' . $bankDetails->destination_holder_iban . '</td></tr>';
+            $invoiceBankDetails .= '<tr><td>' . $this->l('Reference number') . ':</td><td>' . $bankDetails->reference . '</td></tr>';
+            $invoiceBankDetails .= '</table>';
+        }
+
+        return $invoiceBankDetails;
+    }
+
+    /**
+     * Get the name of the refund method. Return null if refund method is unknown
+     *
+     * @return string|null
+     */
+    public function getRefundMethod()
+    {
+        if (array_sum(Tools::getValue('cancelQuantity'))) {
+            return 'cancelQuantity';
+        }
+
+        if (array_sum(Tools::getValue('partialRefundProduct'))) {
+            return 'partialRefundProduct';
+        }
+
+        if (array_sum(Tools::getValue('partialRefundProductQuantity'))) {
+            return 'partialRefundProductQuantity';
+        }
+
+        return null;
+    }
 }

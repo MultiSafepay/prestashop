@@ -28,7 +28,8 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-require(_PS_MODULE_DIR_ . '/multisafepay/helpers/Helper.php');
+use MultiSafepay\PrestaShop\helpers\Helper;
+use MultiSafepay\PrestaShop\models\Api\MspClient;
 
 class MultisafepayValidationModuleFrontController extends ModuleFrontController
 {
@@ -106,7 +107,6 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
         $order = new Order(Order::getOrderByCartId((int) $cart_id));
 
         if ($type == "redirect") {
-
             if (isset($order->id_cart) && $order->id_cart > 0) {
                 $url = "index.php?controller=order-confirmation"
                         . '&key=' . $order->secure_key
@@ -117,8 +117,6 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                 Tools::redirect($url);
                 exit;
             } else {
-
-
                 switch ($this->transaction->status) {
                     case 'initialized':
                         $this->create_order = false;
@@ -143,8 +141,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                 }
 
                 if ($this->create_order) {
-
-                    if ($paid != $total ){
+                    if ($paid != $total) {
                         $this->order_status = Configuration::get('PS_OS_ERROR');
                     }
 
@@ -155,7 +152,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
 
                     $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $used_payment_method, null, $extra_properties, (int) $cart->id_currency, false, $customer->secure_key);
                     $order = new Order(Order::getOrderByCartId((int) $cart_id));
-                    if ($paid != $total){
+                    if ($paid != $total) {
                          $this->addMessage($order, $customer);
                     }
 
@@ -163,7 +160,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                     Tools::redirect('index.php?controller=order-confirmation&id_cart=' . (int) $cart->id . '&id_module=' . (int) $this->module->id . '&id_order=' . $order->id . '&key=' . $customer->secure_key);
                     exit;
                 } else {
-                    $this->errors[] = $this->module->l('Your transaction was processed, but the correct transaction status couldn\'t not be determined and you are redirected to your order history page instead of the order confirmation page. Transaction status:','validation') . $this->transaction->status;
+                    $this->errors[] = $this->module->l('Your transaction was processed, but the correct transaction status couldn\'t not be determined and you are redirected to your order history page instead of the order confirmation page. Transaction status:', 'validation') . $this->transaction->status;
                     $this->unlock();
                     $this->redirectWithNotifications($this->context->link->getPageLink('history', true, null, array()));
                     exit;
@@ -228,14 +225,12 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
             }
 
             if (isset($order->id_cart) && $order->id_cart > 0) {
-                if ($paid == $total){
-
+                if ($paid == $total) {
                     $status_history = Db::getInstance()->ExecuteS('SELECT * FROM `' . _DB_PREFIX_ . 'order_history` WHERE `id_order` = ' . (int) $order->id);
                     //Get all previous order stats, if status is not yet added to the order in the past then we update, else the update was already done and the status was changes after and updating it can give a conflict with other processing flows.
                     $status_in_history = false;
 
                     foreach ($status_history as $key => $status) {
-
                         if ($status['id_order_state'] == $this->order_status) {
                             //status for the update is already in the history, so we don't update
                             $status_in_history = true;
@@ -262,8 +257,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                 }
             } else {
                 if ($this->create_order) {
-
-                    if ($paid != $total ){
+                    if ($paid != $total) {
                         $this->order_status = Configuration::get('PS_OS_ERROR');
                     }
 
@@ -274,13 +268,9 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
 
                     $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $used_payment_method, null, $extra_properties, (int) $cart->id_currency, false, $customer->secure_key);
                     $order = new Order(Order::getOrderByCartId((int) $cart_id));
-                    if ($paid != $total){
+                    if ($paid != $total) {
                          $this->addMessage($order, $customer);
                     }
-
-                    $this->unlock();
-                    Tools::redirect('index.php?controller=order-confirmation&id_cart=' . (int) $cart->id . '&id_module=' . (int) $this->module->id . '&id_order=' . $order->id . '&key=' . $customer->secure_key);
-                    exit;
                 }
             }
         }
@@ -301,13 +291,12 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                    $this->module->l('This often happens when the payment is done through a second chance mail and the shopping cart has changed after the first payment attempt.', 'validation') . "\r\n" .
                    $this->module->l('Payment has been made for the following item(s):', 'validation') . "\r\n";
 
-        foreach ($this->transaction->shopping_cart->items as $item => $product){
+        foreach ($this->transaction->shopping_cart->items as $item => $product) {
             $message .= sprintf("%d x %s \r\n", $product->quantity, $product->name);
         }
 
         $message = strip_tags($message);
         if (Validate::isCleanHtml($message)) {
-
             // Add this message in the customer thread
             $customer_thread = new CustomerThread();
             $customer_thread->id_contact = 0;
@@ -332,8 +321,9 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
 
     private function unlock()
     {
-        if (file_exists($this->lock_file))
+        if (file_exists($this->lock_file)) {
             unlink($this->lock_file);
+        }
     }
 
 

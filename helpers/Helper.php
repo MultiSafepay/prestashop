@@ -28,8 +28,9 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+namespace MultiSafepay\PrestaShop\helpers;
 
-class Helper extends Module
+class Helper extends \Module
 {
     /**
      * @param $gateway_code
@@ -43,12 +44,45 @@ class Helper extends Module
         if ($gateway_code == 'coupon') {
             $result = 'Coupon';
         } else {
-            $msp = new Multisafepay;
+            $msp = new \Multisafepay();
             foreach ($msp->gateways as $gateway) {
                 if ($gateway['code'] == $gateway_code) {
                     $result = $gateway['name'];
                     break;
                 }
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * @param $bankDetails
+     * @param int $cartId
+     */
+    public function saveBankTransferDetails($bankDetails, $cartId)
+    {
+        $msg = new \Message();
+        $msg->message = json_encode($bankDetails);
+        $msg->id_cart = (int)$cartId;
+        $msg->add();
+    }
+
+
+    /**
+     * @param $orderId
+     * @param $searchString
+     * @return string
+     */
+    public function getCustomerMessage($orderId, $searchString)
+    {
+        $result = '';
+        $customerMessage = new \CustomerMessageCore();
+        $messages = $customerMessage->getMessagesByOrderId($orderId);
+
+        foreach ($messages as $message) {
+            if (strpos($message['message'], $searchString)) {
+                $result = $message['message'];
+                break;
             }
         }
         return $result;
