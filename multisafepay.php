@@ -442,8 +442,8 @@ class Multisafepay extends PaymentModule
 
 
         if (Tools::isSubmit('btnSubmit') &&
-            ( Configuration::get('MULTISAFEPAY_ENVIRONMENT') != Tools::getValue('MULTISAFEPAY_ENVIRONMENT') ||
-              Configuration::get('MULTISAFEPAY_API_KEY')     != Tools::getValue('MULTISAFEPAY_API_KEY') ) ) {
+            (Configuration::get('MULTISAFEPAY_ENVIRONMENT') != Tools::getValue('MULTISAFEPAY_ENVIRONMENT') ||
+              Configuration::get('MULTISAFEPAY_API_KEY')     != Tools::getValue('MULTISAFEPAY_API_KEY'))) {
             $postMessages['errors'] = $this->checkApiKey();
             return $postMessages;
         }
