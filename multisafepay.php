@@ -116,7 +116,7 @@ class Multisafepay extends PaymentModule
     {
         $this->name = 'multisafepay';
         $this->tab = 'payments_gateways';
-        $this->version = '4.4.0';
+        $this->version = '4.5.0';
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
         $this->author = 'MultiSafepay';
         $this->controllers = array('validation', 'payment');
@@ -442,8 +442,8 @@ class Multisafepay extends PaymentModule
 
 
         if (Tools::isSubmit('btnSubmit') &&
-            ( Configuration::get('MULTISAFEPAY_ENVIRONMENT') != Tools::getValue('MULTISAFEPAY_ENVIRONMENT') ||
-              Configuration::get('MULTISAFEPAY_API_KEY')     != Tools::getValue('MULTISAFEPAY_API_KEY') ) ) {
+            (Configuration::get('MULTISAFEPAY_ENVIRONMENT') != Tools::getValue('MULTISAFEPAY_ENVIRONMENT') ||
+              Configuration::get('MULTISAFEPAY_API_KEY')     != Tools::getValue('MULTISAFEPAY_API_KEY'))) {
             $postMessages['errors'] = $this->checkApiKey();
             return $postMessages;
         }
@@ -1328,6 +1328,11 @@ class Multisafepay extends PaymentModule
      */
     public function hookActionOrderSlipAdd($params = [])
     {
+        // Do not refund at MultiSafepay when vouchers are generated
+        if (Tools::isSubmit('generateDiscountRefund')) {
+            return false;
+        }
+
         if ($params['order']->module !== 'multisafepay') {
             return false;
         }
