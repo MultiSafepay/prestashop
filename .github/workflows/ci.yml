@@ -59,3 +59,17 @@ jobs:
       - name: Upload code coverage
         working-directory: /tmp/prestashop/tests/Resources/modules/multisafepay
         run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }} -R . -s /tmp/prestashop/tests/Resources/modules/multisafepay -Z
+  code_sniffer:
+    runs-on: ubuntu-latest
+    name: Check code conventions
+    steps:
+      - name: Install php
+        uses: shivammathur/setup-php@v1
+        with:
+          php-version: '7.2'
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Download dependencies
+        run: composer install
+      - name: Run Code Sniffer
+        run: vendor/bin/phpcs --standard=phpcs.ruleset.xml .
