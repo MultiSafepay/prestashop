@@ -1,0 +1,61 @@
+name: Build
+on:
+  schedule:
+    - cron: '0 2 * * 0' # Weekly on Sundays at 02:00
+  push:
+jobs:
+  integration_tests:
+    services:
+      nginx:
+        image: nginx
+        ports:
+          - 8080:80
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: false
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: prestashop
+        ports:
+          - 3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        prestashop_version: ['1.7.6.x']
+    name: Integration test (PrestaShop ${{ matrix.prestashop_version }})
+    steps:
+      - name: Install php
+        uses: shivammathur/setup-php@v1
+        with:
+          php-version: '7.2'
+          extensions: intl
+      - name: Checkout code
+        uses: actions/checkout@v1
+        with:
+          path: MultiSafepay
+      - name: Download Prestashop
+        run: git clone https://github.com/PrestaShop/PrestaShop.git /tmp/prestashop -b ${{ matrix.prestashop_version }}
+      - name: Download dependencies
+        working-directory: /tmp/prestashop
+        run: composer install
+      - name: Move plugin to Prestashop
+        run: |
+          cd ..
+          mkdir -p /tmp/prestashop/tests/Resources/modules/multisafepay
+          mv MultiSafepay/* /tmp/prestashop/tests/Resources/modules/multisafepay
+      - name: Install Prestashop
+        working-directory: /tmp/prestashop/install-dev
+        run: php index_cli.php --domain=localhost:8080 --db_server=127.0.0.1:${{ job.services.mysql.ports['3306'] }} --db_name=prestashop --db_user=root --db_password=password
+      - name: Create test database
+        working-directory: /tmp/prestashop
+        run: composer create-test-db
+      - name: Create autoloader
+        working-directory: /tmp/prestashop/tests/Resources/modules/multisafepay
+        run: composer dump-autoload
+      - name: Run PHPUnit
+        working-directory: /tmp/prestashop
+        run: vendor/bin/phpunit -c tests/Resources/modules/multisafepay/phpunit.xml.dist --coverage-clover=/tmp/prestashop/tests/Resources/modules/multisafepay/coverage.xml
+      - name: Upload code coverage
+        working-directory: /tmp/prestashop/tests/Resources/modules/multisafepay
+        run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }} -R . -s /tmp/prestashop/tests/Resources/modules/multisafepay -Z

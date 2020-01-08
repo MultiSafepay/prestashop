@@ -237,7 +237,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
      * getCart() generated the checkout data structure and items list
      */
 
-    private function getSecondsActive()
+    public function getSecondsActive()
     {
         $seconds_active = null;
         $seconds = Configuration::get('MULTISAFEPAY_TIME_ACTIVE');
