@@ -1,6 +1,6 @@
 /.gitattributes export-ignore
 /.gitignore export-ignore
 /.github/ export-ignore
-/.phpcs.ruleset.xml export-ignore
-/.phpunit.xml.dist export-ignore
+/phpcs.ruleset.xml export-ignore
+/phpunit.xml.dist export-ignore
 /Tests/ export-ignore
