@@ -1079,7 +1079,7 @@ class Multisafepay extends PaymentModule
                 // check if gateway is enabled in the plug-in
                 if (Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"])) {
                     if (!in_array($gateway["code"], $mspGateways)) {
-                        $warnings[] = sprintf("%s %s", $gateway["name"], $this->l('Is not activated in your Multisafepay account'));
+                        $warnings[] = sprintf("%s %s", $gateway["name"], $this->l('Is not activated in your MultiSafepay account'));
                     }
                 }
             }
@@ -1105,7 +1105,7 @@ class Multisafepay extends PaymentModule
                 // check if giftcards is enabled in the plug-in
                 if (Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"])) {
                     if (!in_array($giftcard["code"], $mspGateways)) {
-                        $warnings[] = sprintf("%s %s", $giftcard["name"], $this->l('Is not activated in your Multisafepay account'));
+                        $warnings[] = sprintf("%s %s", $giftcard["name"], $this->l('Is not activated in your MultiSafepay account'));
                     }
                 }
             }
