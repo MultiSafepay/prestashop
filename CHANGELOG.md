@@ -1,5 +1,5 @@
 ## 4.5.1
-Release date: January 29th, 2020
+Release date: February 26th, 2020
 
 ### Fixed
 + PLGPRSS17-83: Fix transaction status was not updated when set to shipped
