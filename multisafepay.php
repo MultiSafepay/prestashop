@@ -116,7 +116,7 @@ class Multisafepay extends PaymentModule
     {
         $this->name = 'multisafepay';
         $this->tab = 'payments_gateways';
-        $this->version = '4.5.0';
+        $this->version = '4.5.1';
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
         $this->author = 'MultiSafepay';
         $this->controllers = array('validation', 'payment');
@@ -329,12 +329,13 @@ class Multisafepay extends PaymentModule
         return parent::uninstall();
     }
 
+
     /**
-     * @param $params
+     * @param array $params
      */
-    public function hookActionOrderStatusPostUpdate($params)
+    public function hookActionOrderStatusPostUpdate(array $params)
     {
-        if ($params['newOrderStatus']->id === Configuration::get('PS_OS_SHIPPING')) {
+        if ((int)$params['newOrderStatus']->id === (int)Configuration::get('PS_OS_SHIPPING')) {
             $carrier = new Carrier((int)$params['cart']->id_carrier);
             $shipData = array(
                 'tracktrace_code' => '',
