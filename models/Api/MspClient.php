@@ -31,6 +31,8 @@
 
 namespace MultiSafepay\PrestaShop\models\Api;
 
+use Configuration;
+use FileLogger;
 use MultiSafepay\PrestaShop\models\Api\Objects\Orders;
 use MultiSafepay\PrestaShop\models\Api\Objects\Issuers;
 use MultiSafepay\PrestaShop\models\Api\Objects\Gateways;
