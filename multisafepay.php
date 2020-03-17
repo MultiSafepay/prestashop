@@ -110,6 +110,7 @@ class Multisafepay extends PaymentModule
         array("code" => "afterpay", "name" => "AfterPay", 'config' => true),
         array("code" => "trustly", "name" => "Trustly", 'config' => true),
         array("code" => "idealqr", "name" => "iDEAL QR", 'config' => true),
+        array("code" => "dbrtp", "name" => "Direct Bank Transfer", 'config' => true),
     );
 
     public function __construct()
