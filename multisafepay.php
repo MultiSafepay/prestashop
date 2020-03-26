@@ -118,7 +118,7 @@ class Multisafepay extends PaymentModule
     {
         $this->name = 'multisafepay';
         $this->tab = 'payments_gateways';
-        $this->version = '4.5.1';
+        $this->version = '4.6.0-RC1';
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
         $this->author = 'MultiSafepay';
         $this->controllers = array('validation', 'payment');
