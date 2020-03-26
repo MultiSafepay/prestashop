@@ -111,6 +111,7 @@ class Multisafepay extends PaymentModule
         array("code" => "trustly", "name" => "Trustly", 'config' => true),
         array("code" => "idealqr", "name" => "iDEAL QR", 'config' => true),
         array("code" => "dbrtp", "name" => "Direct Bank Transfer", 'config' => true),
+        array("code" => "applepay", "name" => "Apple Pay", 'config' => true),
     );
 
     public function __construct()
@@ -985,6 +986,13 @@ class Multisafepay extends PaymentModule
                             break;
                         case "einvoice":
                             $externalOption->setForm($this->getEinvoice());
+                            break;
+                        case "applepay":
+                            $this->context->smarty->assign([
+                                'action' => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => 'applepay'), true),
+                            ]);
+
+                            $externalOption->setForm($this->context->smarty->fetch('module:multisafepay/views/templates/front/applepay.tpl'));
                             break;
                         case "amex":
                         case "visa":
