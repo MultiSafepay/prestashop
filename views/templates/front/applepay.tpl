@@ -2,7 +2,7 @@
   <input type="hidden" name="gateway" value="applepay"/>
   <script>
     var applePayPaymentOptionsBlock = document.getElementById('msp-applepay-form').parentElement;
-    var paymentMethodId = applePayPaymentOptionsBlock.getAttribute('id').match(/\d/g)[0];
+    var paymentMethodId = applePayPaymentOptionsBlock.getAttribute('id').match(/\d+/g)[0];
     var PaymentMethodBlock = document.getElementById('payment-option-' + paymentMethodId + '-container');
     PaymentMethodBlock.style.display = 'none';
 
