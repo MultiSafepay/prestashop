@@ -1,5 +1,5 @@
 ## 4.6.0
-Release date: March 26th, 2020
+Release date: March 27th, 2020
 
 ### Added
 + PLGPRSS17-97: Add Apple Pay
