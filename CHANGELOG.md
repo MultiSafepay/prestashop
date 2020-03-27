@@ -1,3 +1,15 @@
+## 4.6.0
+Release date: March 27th, 2020
+
+### Added
++ PLGPRSS17-97: Add Apple Pay
++ PLGPRSS17-96: Add Direct Bank Transfer
+
+### Fixed
++ PLGPRSS17-94: Fix ClassNotFoundException when cURL returns an error
+
+***
+
 ## 4.5.1
 Release date: February 26th, 2020
 

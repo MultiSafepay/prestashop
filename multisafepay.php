@@ -110,13 +110,15 @@ class Multisafepay extends PaymentModule
         array("code" => "afterpay", "name" => "AfterPay", 'config' => true),
         array("code" => "trustly", "name" => "Trustly", 'config' => true),
         array("code" => "idealqr", "name" => "iDEAL QR", 'config' => true),
+        array("code" => "dbrtp", "name" => "Direct Bank Transfer", 'config' => true),
+        array("code" => "applepay", "name" => "Apple Pay", 'config' => true),
     );
 
     public function __construct()
     {
         $this->name = 'multisafepay';
         $this->tab = 'payments_gateways';
-        $this->version = '4.5.1';
+        $this->version = '4.6.0';
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
         $this->author = 'MultiSafepay';
         $this->controllers = array('validation', 'payment');
@@ -985,6 +987,13 @@ class Multisafepay extends PaymentModule
                         case "einvoice":
                             $externalOption->setForm($this->getEinvoice());
                             break;
+                        case "applepay":
+                            $this->context->smarty->assign([
+                                'action' => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => 'applepay'), true),
+                            ]);
+
+                            $externalOption->setForm($this->context->smarty->fetch('module:multisafepay/views/templates/front/applepay.tpl'));
+                            break;
                         case "amex":
                         case "visa":
                         case "mastercard":
@@ -1079,7 +1088,7 @@ class Multisafepay extends PaymentModule
                 // check if gateway is enabled in the plug-in
                 if (Tools::getValue('MULTISAFEPAY_GATEWAY_' . $gateway["code"])) {
                     if (!in_array($gateway["code"], $mspGateways)) {
-                        $warnings[] = sprintf("%s %s", $gateway["name"], $this->l('Is not activated in your Multisafepay account'));
+                        $warnings[] = sprintf("%s %s", $gateway["name"], $this->l('Is not activated in your MultiSafepay account'));
                     }
                 }
             }
@@ -1105,7 +1114,7 @@ class Multisafepay extends PaymentModule
                 // check if giftcards is enabled in the plug-in
                 if (Tools::getValue('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"])) {
                     if (!in_array($giftcard["code"], $mspGateways)) {
-                        $warnings[] = sprintf("%s %s", $giftcard["name"], $this->l('Is not activated in your Multisafepay account'));
+                        $warnings[] = sprintf("%s %s", $giftcard["name"], $this->l('Is not activated in your MultiSafepay account'));
                     }
                 }
             }
