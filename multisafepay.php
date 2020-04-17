@@ -1036,16 +1036,16 @@ class Multisafepay extends PaymentModule
 
                 $activeGroup = false;
                 foreach ($groups as $group) {
-                    if (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $gateway["code"] . '_GROUP_' . $group) == 'on') {
+                    if (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_' . $group) == 'on') {
                         $activeGroup = true;
                         break;
                     }
                 }
 
                 if ($activeGroup === true &&
-                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $gateway["code"] . '_CURRENCY_' . $id_currency) == 'on' &&
-                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $gateway["code"] . '_COUNTRY_'  . $id_country) == 'on' &&
-                    (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $gateway["code"] . '_CARRIER_'  . $carrierIdReference) == 'on' || $isVirtualCart)
+                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CURRENCY_' . $id_currency) == 'on' &&
+                    Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_COUNTRY_'  . $id_country) == 'on' &&
+                    (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_CARRIER_'  . $carrierIdReference) == 'on' || $isVirtualCart)
                     ) {
                     $active = true;
                 }
