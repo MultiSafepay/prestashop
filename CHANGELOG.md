@@ -1,3 +1,11 @@
+## 4.6.1
+Release date: April 17th, 2020
+
+### Fixed
++ PLGPRSS17-105: Gift cards not visible in checkout
+
+***
+
 ## 4.6.0
 Release date: March 27th, 2020
 
