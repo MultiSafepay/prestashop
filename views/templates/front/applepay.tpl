@@ -4,9 +4,10 @@
     var applePayPaymentOptionsBlock = document.getElementById('msp-applepay-form').parentElement;
     var paymentMethodId = applePayPaymentOptionsBlock.getAttribute('id').match(/\d+/g)[0];
     var PaymentMethodBlock = document.getElementById('payment-option-' + paymentMethodId + '-container');
-    PaymentMethodBlock.style.display = 'none';
 
     try {
+      PaymentMethodBlock.style.display = 'none';
+
       if (window.ApplePaySession && window.ApplePaySession.canMakePayments()) {
         PaymentMethodBlock.style.display = 'block';
       }
