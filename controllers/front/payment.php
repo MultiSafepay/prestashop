@@ -278,9 +278,11 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         // Products
         $items = "<ul>\n";
         $products = array_merge($total_data['products'], $total_data['gift_products']);
+
         foreach ($products as $product) {
             $product_name = $product['name'];
             $merchant_item_id = $product['id_product'];
+            $tax_name = $product['tax_name'] ?: 'none';
 
             if (!empty($product['attributes_small'])) {
                 $product_name .= ' ( ' . $product['attributes_small'] . ' )';
@@ -295,12 +297,12 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 'unit_price' => round($product['price'], 4),
                 'quantity' => $product['quantity'],
                 'merchant_item_id' => $merchant_item_id,
-                'tax_table_selector' => $product['tax_name'],
+                'tax_table_selector' => $tax_name,
                 'weight' => array('unit' => $product['weight'],
                     'value' => 'KG')
             );
             $checkout_options['tax_tables']['alternate'][] =
-                array('name' => $product['tax_name'], 'rules' => array(array('rate' => $product['rate'] / 100)));
+                array('name' => $tax_name, 'rules' => array(array('rate' => $product['rate'] / 100)));
         }
 
         $items .= "</ul>\n";
