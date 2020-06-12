@@ -56,7 +56,7 @@ class Multisafepay extends PaymentModule
      * This array contains all supported gifcards and is used to generate the configuration an paymentOptions
      */
     public $giftcards = array(
-        array("code" => "webshopgiftcard", "name" => "Webshopgiftcard", 'config' => true),
+        array("code" => "webshopgft", "name" => "Webshopgiftcard", 'config' => true),
         array("code" => "babygiftcard", "name" => "Babygiftcard", 'config' => true),
         array("code" => "boekenbon", "name" => "Boekenbon", 'config' => true),
         array("code" => "erotiekbon", "name" => "Erotiekbon", 'config' => true),
