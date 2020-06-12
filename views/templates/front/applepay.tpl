@@ -3,7 +3,12 @@
   <script>
     var applePayPaymentOptionsBlock = document.getElementById('msp-applepay-form').parentElement;
     var paymentMethodId = applePayPaymentOptionsBlock.getAttribute('id').match(/\d+/g)[0];
-    var PaymentMethodBlock = document.getElementById('payment-option-' + paymentMethodId + '-container');
+    var PaymentMethodBlock;
+    if (typeof OnePageCheckoutPS !== typeof undefined) {
+        PaymentMethodBlock = applePayPaymentOptionsBlock.parentElement;
+    } else {
+        PaymentMethodBlock = document.getElementById('payment-option-' + paymentMethodId + '-container');
+    }
 
     try {
       PaymentMethodBlock.style.display = 'none';
