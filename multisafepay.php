@@ -331,27 +331,50 @@ class Multisafepay extends PaymentModule
         return parent::uninstall();
     }
 
+    /**
+     * @param $id
+     * @return bool
+     */
+    private function isShippingStatus($id)
+    {
+        return ((int)$id === (int)Configuration::get('PS_OS_SHIPPING'));
+    }
+
+    /**
+     * @param \Order $order
+     * @return bool
+     */
+    private function isMultiSafepayOrder(Order $order)
+    {
+        return $order->module && $order->module === 'multisafepay';
+    }
 
     /**
      * @param array $params
      */
     public function hookActionOrderStatusPostUpdate(array $params)
     {
-        if ((int)$params['newOrderStatus']->id === (int)Configuration::get('PS_OS_SHIPPING')) {
-            $carrier = new Carrier((int)$params['cart']->id_carrier);
-            $shipData = array(
-                'tracktrace_code' => '',
-                'carrier' => $carrier->name,
-                'ship_date' => date('Y-m-d H:i:s'),
-                'reason' => 'Shipped'
-            );
-            $endpoint = 'orders/' . $params['cart']->id;
-
-            $multisafepay = new MspClient();
-            $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
-            $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
-            $multisafepay->orders->patch($shipData, $endpoint);
+        if (!$this->isShippingStatus($params['newOrderStatus']->id)) {
+            return;
         }
+        $order = new Order((int)$params['id_order']);
+        if (!$this->isMultiSafepayOrder($order)) {
+            return;
+        }
+
+        $carrier = new Carrier((int)$params['cart']->id_carrier);
+        $shipData = array(
+            'tracktrace_code' => $order->getWsShippingNumber(),
+            'carrier' => $carrier->name,
+            'ship_date' => date('Y-m-d H:i:s'),
+            'reason' => 'Shipped'
+        );
+        $endpoint = 'orders/' . $params['cart']->id;
+
+        $multisafepay = new MspClient();
+        $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
+        $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
+        $multisafepay->orders->patch($shipData, $endpoint);
     }
 
     /*
