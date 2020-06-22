@@ -63,11 +63,8 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         $locale = Language::getLocaleByIso($lang_iso);
         $real_locale = str_replace('-', '_', $locale);
 
-        if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && $_SERVER['HTTP_X_FORWARDED_FOR']) {
-            $forwarded_ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-        } else {
-            $forwarded_ip = '';
-        }
+        $ip_address = $this->validateIP($_SERVER['REMOTE_ADDR']);
+        $forwarded_ip = $this->validateIP($_SERVER['HTTP_X_FORWARDED_FOR']);
 
         list ($items, $shopping_cart, $checkout_options) = $this->getShoppingCart();
         list ($street_billing, $house_number_billing) = $this->parseAddress($billing->address1, $billing->address2);
@@ -97,7 +94,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             ),
             "customer" => array(
                 "locale" => $real_locale,
-                "ip_address" => Tools::getRemoteAddr(),
+                "ip_address" => $ip_address,
                 "forwarded_ip" => $forwarded_ip,
                 "first_name" => $billing->firstname,
                 "last_name" => $billing->lastname,
@@ -112,7 +109,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             ),
             "delivery" => array(
                 "locale" => $real_locale,
-                "ip_address" => Tools::getRemoteAddr(),
+                "ip_address" => $ip_address,
                 "forwarded_ip" => $forwarded_ip,
                 "first_name" => $shipping->firstname,
                 "last_name" => $shipping->lastname,
@@ -231,6 +228,24 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             $this->errors[] = $e->getMessage();
             $this->redirectWithNotifications($this->context->link->getPageLink('order', true, null, array('step' => '3')));
         }
+    }
+
+
+    /**
+     * @param $ipAddress
+     * @return string|null
+     */
+    private function validateIP($ipAddress)
+    {
+        if (isset($ipAddress)) {
+            $ipList = explode(',', $ipAddress);
+            $ipAddress = trim(reset($ipList));
+
+            if (filter_var($ipAddress, FILTER_VALIDATE_IP)) {
+                return $ipAddress;
+            }
+        }
+        return null;
     }
 
     /*
