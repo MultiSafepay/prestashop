@@ -372,22 +372,38 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         return array($items, $shopping_cart, $checkout_options);
     }
 
+    /**
+     * Split the address into street and house number with extension.
+     *
+     * @param string $address1
+     * @param string $address2
+     * @return array
+     */
     private function parseAddress($address1, $address2 = '')
     {
+        // Trim the addresses
         $address1 = trim($address1);
         $address2 = trim($address2);
-        $adress = trim($address1 . ' ' . $address2);
+        $fullAddress = trim("{$address1} {$address2}");
+        $fullAddress = preg_replace("/[[:blank:]]+/", ' ', $fullAddress);
 
-        $aMatch = array();
-        $pattern = '#^(.*?)([0-9]{1,5})([\w[:punct:]\-/]*)$#';
-        $matchResult = preg_match($pattern, $adress, $aMatch);
+        // Make array of all regex matches
+        $matches = array();
 
-        $street = (isset($aMatch[1])) ? $aMatch[1] : '';
-        $apartment = (isset($aMatch[2])) ? $aMatch[2] : '';
-        $apartment .= (isset($aMatch[3]) && $aMatch[3] != $aMatch[2]) ? $aMatch[3] : '';
+        /**
+         * Regex part one: Add all before number.
+         * If number contains whitespace, Add it also to street.
+         * All after that will be added to apartment
+         */
+        $pattern = '/(.+?)\s?([\d]+[\S]*)(\s?[A-z]*?)$/';
+        preg_match($pattern, $fullAddress, $matches);
 
+        //Save the street and apartment and trim the result
+        $street = isset($matches[1]) ? $matches[1] : '';
+        $apartment = isset($matches[2]) ? $matches[2] : '';
+        $extension = isset($matches[3]) ? $matches[3] : '';
         $street = trim($street);
-        $apartment = trim($apartment);
+        $apartment = trim($apartment . $extension);
 
         return array($street, $apartment);
     }
