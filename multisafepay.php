@@ -67,7 +67,6 @@ class Multisafepay extends PaymentModule
         array("code" => "fashioncheque", "name" => "Fashioncheque", 'config' => true),
         array("code" => "fashiongft", "name" => "Fashiongiftcard", 'config' => true),
         array("code" => "podium", "name" => "Podium", 'config' => true),
-        array("code" => "vvvbon", "name" => "VVV Bon", 'config' => true),
         array("code" => "vvvgiftcrd", "name" => "VVV Cadeaukaart", 'config' => true),
         array("code" => "sportenfit", "name" => "Sport en Fit", 'config' => true),
         array("code" => "goodcard", "name" => "Goodcard", 'config' => true),
