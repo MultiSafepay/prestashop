@@ -1004,6 +1004,9 @@ class Multisafepay extends PaymentModule
                         case "ideal":
                             $externalOption->setForm($this->getIdeal());
                             break;
+                        case "afterpay":
+                            $externalOption->setForm($this->getAfterPay());
+                            break;
                         case "payafter":
                             $externalOption->setForm($this->getPayafter());
                             break;
@@ -1200,6 +1203,33 @@ class Multisafepay extends PaymentModule
         }
     }
 
+    protected function getAfterPay()
+    {
+        $multisafepay_module_dir = $this->_path;
+
+        $this->context->smarty->assign([
+            'action'            => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => 'afterpay'), true),
+            'multisafepay_module_dir'  => $multisafepay_module_dir,
+
+            'label_gender'       => $this->l('Gender'),
+            'label_birthday'    => $this->l('Birthday'),
+            'label_phone'       => $this->l('Phone'),
+            'label_mr'          => $this->l('Mr'),
+            'label_mrs'         => $this->l('Mrs'),
+            'label_miss'        => $this->l('Miss'),
+
+            'gender'            => $this->getGender(),
+            'birthday'          => $this->getBirthday(),
+            'phone'             => $this->getPhoneNumber(),
+
+            'terms'             => sprintf($this->l('By confirming this order you agree with the %s Terms and Conditions %s of AfterPay'), '<a href="https://www.afterpay.nl/en/about/pay-with-afterpay/payment-conditions" target="_blank">', '</a>')
+
+        ]);
+
+        return $this->context->smarty->fetch('module:multisafepay/views/templates/front/afterpay.tpl');
+    }
+
+
     protected function getPayafter()
     {
         $multisafepay_module_dir = $this->_path;
@@ -1275,18 +1305,20 @@ class Multisafepay extends PaymentModule
         return $phone;
     }
 
+    /**
+     * @return string|null
+     */
     private function getGender()
     {
-        $gender = null;
+        $id_gender = null;
 
         // Get Gender from Customer
         $customer = new Customer($this->context->cart->id_customer);
         if (Validate::isLoadedObject($customer)) {
-            $gender = $customer->id_gender;
+            $id_gender = $customer->id_gender;
         }
-        return $gender;
+        return $id_gender;
     }
-
 
 
     protected function checkApiKey()

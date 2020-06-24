@@ -433,6 +433,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                     "issuer_id" => Tools::getValue('issuer')
                 );
                 break;
+            case 'afterpay':
             case 'payafter':
             case 'einvoice':
                 $type = 'direct';

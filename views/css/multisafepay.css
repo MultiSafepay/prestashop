@@ -147,3 +147,16 @@ input.multisafepay{
     margin: 10px 0px 0px 0px;
 }
 
+label.multisafepay-gender {
+    float: left;
+    clear: none;
+    display: block;
+    padding: 0px 1em 0px 8px;
+}
+
+input.multisafepay-gender[type=radio],
+input.multisafepay-gender.radio {
+    float: left;
+    clear: none;
+    margin: 5px 0 0 2px;
+}

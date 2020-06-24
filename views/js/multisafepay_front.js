@@ -1,4 +1,15 @@
 $(document).ready(function () {
+    $("#msp-afterpay-form").submit(function (event) {
+        $("#payment-confirmation button").attr("disabled", true);
+        var required_fields_afterpay = ["msp-afterpay-birthday", "msp-afterpay-phone"];
+        for (i = 0; i < required_fields_afterpay.length; i++) {
+            if (document.getElementById(required_fields_afterpay[i]).checkValidity() === false) {
+                $("#payment-confirmation button").attr("disabled", false);
+                event.preventDefault();
+                $("button[type=submit]", $("#msp-afterpay-form")).click();
+            }
+        }
+    });
 
     $("#msp-einvoice-form").submit(function (event) {
         $("#payment-confirmation button").attr("disabled", true);
