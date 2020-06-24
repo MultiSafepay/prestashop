@@ -57,9 +57,7 @@ class Multisafepay extends PaymentModule
      */
     public $giftcards = array(
         array("code" => "webshopgft", "name" => "Webshopgiftcard", 'config' => true),
-        array("code" => "babygiftcard", "name" => "Babygiftcard", 'config' => true),
         array("code" => "boekenbon", "name" => "Boekenbon", 'config' => true),
-        array("code" => "erotiekbon", "name" => "Erotiekbon", 'config' => true),
         array("code" => "parfumcadeaukaart", "name" => "Parfumcadeaukaart", 'config' => true),
         array("code" => "yourgift", "name" => "Yourgift", 'config' => true),
         array("code" => "wijncadeau", "name" => "Wijncadeau", 'config' => true),
@@ -71,7 +69,6 @@ class Multisafepay extends PaymentModule
         array("code" => "sportenfit", "name" => "Sport en Fit", 'config' => true),
         array("code" => "goodcard", "name" => "Goodcard", 'config' => true),
         array("code" => "nationaletuinbon", "name" => "Nationale tuinbon", 'config' => true),
-        array("code" => "nationaleverwencadeaubon", "name" => "Nationale verwencadeaubon", 'config' => true),
         array("code" => "beautyandwellness", "name" => "Beauty and wellness", 'config' => true),
         array("code" => "fietsenbon", "name" => "Fietsenbon", 'config' => true),
         array("code" => "wellnessgiftcard", "name" => "Wellnessgiftcard", 'config' => true),

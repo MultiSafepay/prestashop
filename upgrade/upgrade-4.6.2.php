@@ -37,6 +37,18 @@ if (!defined('_PS_VERSION_')) {
  */
 function upgrade_module_4_6_2()
 {
+    // Remove Babygiftcard elements from the configuration
+    $sql = "DELETE FROM " . _DB_PREFIX_ . "configuration WHERE name LIKE 'MULTISAFEPAY_GIFTCARD_babygiftcard%'";
+    Db::getInstance()->execute($sql);
+
+    // Remove Erotiekbon elements from the configuration
+    $sql = "DELETE FROM " . _DB_PREFIX_ . "configuration WHERE name LIKE 'MULTISAFEPAY_GIFTCARD_erotiekbon%'";
+    Db::getInstance()->execute($sql);
+
+    // Remove Nationale Verween Cadeaubon elements from the configuration
+    $sql = "DELETE FROM " . _DB_PREFIX_ . "configuration WHERE name LIKE 'MULTISAFEPAY_GIFTCARD_nationaleverwencadeaubon%'";
+    Db::getInstance()->execute($sql);
+
     // Remove VVV Bon elements from the configuration
     $sql = "DELETE FROM " . _DB_PREFIX_ . "configuration WHERE name LIKE 'MULTISAFEPAY_GIFTCARD_vvvbon%'";
     return Db::getInstance()->execute($sql);
