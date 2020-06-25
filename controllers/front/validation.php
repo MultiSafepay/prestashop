@@ -48,6 +48,11 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
         $this->lock_file = _PS_MODULE_DIR_ . 'multisafepay' . DIRECTORY_SEPARATOR . 'locks' . DIRECTORY_SEPARATOR . 'multisafepay_cart_' . $cart_id . '.lock';
         $tries = 1;
 
+        // Sometimes the redirect- and notification url are triggered at the exact same time, causing double orders.
+        // Now hold redirect for 1 sec. to give notification the change to execute first.
+        if ($type == "redirect") {
+            sleep(1);
+        }
 
         // if order exists but the payment is not processed by MultiSafepay
         $order = new Order(Order::getOrderByCartId((int) $cart_id));
