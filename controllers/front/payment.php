@@ -76,7 +76,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             "type" => $type,
             "order_id" => $this->context->cart->id,
             "currency" => $currency->iso_code,
-            "amount" => round(($this->context->cart->getOrderTotal(true, Cart::BOTH) * 100), 2),
+            "amount" => round($this->context->cart->getOrderTotal(true, Cart::BOTH), 2) * 100,
             "description" => $this->module->l('Order of Cart: ', 'payment') . $this->context->cart->id,
             "recurring_id" => $this->decryptRecurringId(),
             "var1" => "",
@@ -309,7 +309,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             $shopping_cart['items'][] = array(
                 'name' => $product_name,
                 'description' => $product['description_short'],
-                'unit_price' => round($product['price'], 4),
+                'unit_price' => round($product['price'], 10),
                 'quantity' => $product['quantity'],
                 'merchant_item_id' => $merchant_item_id,
                 'tax_table_selector' => $tax_name,
@@ -342,7 +342,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             $shopping_cart['items'][] = array(
                 'name' => 'Discount',
                 'description' => $this->module->l('Discount', 'payment'),
-                'unit_price' => round(-$total_data['total_discounts'], 4),
+                'unit_price' => round(-$total_data['total_discounts'], 10),
                 'quantity' => 1,
                 'merchant_item_id' => 'Discount',
                 'tax_table_selector' => 'Discount',
@@ -357,7 +357,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             $shopping_cart['items'][] = array(
                 'name' => 'Wrapping',
                 'description' => $this->module->l('Wrapping', 'payment'),
-                'unit_price' => round($total_data['total_wrapping_tax_exc'], 4),
+                'unit_price' => round($total_data['total_wrapping_tax_exc'], 10),
                 'quantity' => 1,
                 'merchant_item_id' => 'Wrapping',
                 'tax_table_selector' => 'Wrapping',
@@ -373,7 +373,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             $shopping_cart['items'][] = array(
                 'name' => 'Shipping',
                 'description' => $this->module->l('Shipping', 'payment'),
-                'unit_price' => round($total_data['total_shipping_tax_exc'], 4),
+                'unit_price' => round($total_data['total_shipping_tax_exc'], 10),
                 'quantity' => 1,
                 'merchant_item_id' => 'msp-shipping',
                 'tax_table_selector' => 'Shipping',
