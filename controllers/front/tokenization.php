@@ -35,7 +35,7 @@ class MultisafepayTokenizationModuleFrontController extends ModuleFrontControlle
     {
         Db::getInstance()->delete('multisafepay_tokenization', "recurring_id = '".pSQL($token)."'");
 
-        echo Tools::jsonEncode([
+        echo json_encode([
             'status' => 200,
             'message' => 'Token deleted successfully'
         ]);
