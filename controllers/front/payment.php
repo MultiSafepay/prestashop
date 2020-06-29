@@ -279,7 +279,6 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 
         $shopping_cart = array();
         $checkout_options = array();
-        $checkout_options['tax_tables']['default'] = array('shipping_taxed' => 'true', 'rate' => '0.21');
         $checkout_options['tax_tables']['alternate'][] = '';
 
         // Products
