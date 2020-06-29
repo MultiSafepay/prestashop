@@ -859,7 +859,6 @@ class Multisafepay extends PaymentModule
     {
         foreach ($this->giftcards as $key => $giftcard) {
             $this->giftcards[$key]['active'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"]);
-            $this->giftcards[$key]['active'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"]);
             $this->giftcards[$key]['title'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_TITLE');
             $this->giftcards[$key]['sort'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_SORT');
             $this->giftcards[$key]['desc'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_DESC');
