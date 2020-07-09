@@ -1,4 +1,12 @@
 $(document).ready(function () {
+    $("#msp-afterpay-form, #msp-payafter-form, #msp-einvoice-form, #msp-ideal-form").keypress(
+        function (event) {
+            if (event.which === 13) { // ENTER
+                event.preventDefault();
+            }
+        }
+    );
+
     $("#msp-afterpay-form").submit(function (event) {
         $("#payment-confirmation button").attr("disabled", true);
         var required_fields_afterpay = ["msp-afterpay-birthday", "msp-afterpay-phone"];
