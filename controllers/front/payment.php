@@ -465,10 +465,15 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         return (array($type, $gateway_info));
     }
 
+    /**
+     * @return mixed
+     */
     private function decryptRecurringId()
     {
+        $phpEncryption = new PhpEncryption(_NEW_COOKIE_KEY_);
+
         $recurringId = pSQL(Tools::getValue('saved_cc'));
-        return PhpEncryptionCore::decrypt($recurringId);
+        return $phpEncryption->decrypt($recurringId);
     }
 
 

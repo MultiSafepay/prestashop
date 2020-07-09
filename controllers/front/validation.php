@@ -327,12 +327,14 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
     private function updateTokenization()
     {
         if (isset($this->transaction->payment_details->type)
-        && isset($this->transaction->payment_details->last4)
-        && isset($this->transaction->payment_details->card_expiry_date)) {
+            && isset($this->transaction->payment_details->last4)
+            && isset($this->transaction->payment_details->card_expiry_date)) {
+            $phpEncryption = new PhpEncryption(_NEW_COOKIE_KEY_);
+
             Db::getInstance()->update(
                 'multisafepay_tokenization',
                 array(
-                    'recurring_id' => PhpEncryptionCore::encrypt($this->transaction->payment_details->recurring_id),
+                    'recurring_id' => $phpEncryption->encrypt($this->transaction->payment_details->recurring_id),
                     'cc_type' => $this->transaction->payment_details->type,
                     'cc_last4' => $this->transaction->payment_details->last4,
                     'cc_expiry_date' => $this->transaction->payment_details->card_expiry_date,
