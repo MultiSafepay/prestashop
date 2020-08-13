@@ -95,7 +95,7 @@ class Multisafepay extends PaymentModule
         array("code" => "alipay", "name" => "Alipay", 'config' => true),
         array("code" => "connect", "name" => "MultiSafepay", 'config' => true),
         array("code" => "amex", "name" => "American Express", 'config' => true),
-        array("code" => "santander", "name" => "Betaalplan", 'config' => true),
+        array("code" => "santander", "name" => "Betaal per Maand", 'config' => true),
         array("code" => "afterpay", "name" => "AfterPay", 'config' => true),
         array("code" => "trustly", "name" => "Trustly", 'config' => true),
         array("code" => "idealqr", "name" => "iDEAL QR", 'config' => true),
