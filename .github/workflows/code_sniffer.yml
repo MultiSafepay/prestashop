@@ -1,0 +1,21 @@
+name: Code Sniffer
+on:
+  pull_request:
+    branches:
+      - master
+      - develop
+jobs:
+  code_sniffer:
+    runs-on: ubuntu-latest
+    name: Check code conventions
+    steps:
+      - name: Install php
+        uses: shivammathur/setup-php@v1
+        with:
+          php-version: '7.2'
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Download dependencies
+        run: composer install
+      - name: Run Code Sniffer
+        run: vendor/bin/phpcs --standard=phpcs.ruleset.xml .
