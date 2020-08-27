@@ -160,3 +160,16 @@ input.multisafepay-gender.radio {
     clear: none;
     margin: 5px 0 0 2px;
 }
+
+.payment-options .payment-option {
+    align-items: center;
+    display: flex;
+}
+
+.payment-options .payment-option label {
+    margin-bottom: 0;
+}
+
+.payment-options .payment-option label img {
+    padding-left: .5em;
+}
