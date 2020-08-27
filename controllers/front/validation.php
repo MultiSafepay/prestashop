@@ -119,7 +119,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                         $this->create_order = false;
                         if ($this->transaction->payment_details->type == 'BANKTRANS') {
                             $this->create_order = true;
-                            $this->order_status = Configuration::get('PS_OS_BANKWIRE');
+                            $this->order_status = Configuration::get('MULTISAFEPAY_OS_AWAITING_BANK_TRANSFER_PAYMENT');
                             $this->update_order = false;
                         }
                         break;
@@ -169,7 +169,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                     $this->create_order = false;
                     if ($this->transaction->payment_details->type == 'BANKTRANS') {
                         $this->create_order = true;
-                        $this->order_status = Configuration::get('PS_OS_BANKWIRE');
+                        $this->order_status = Configuration::get('MULTISAFEPAY_OS_AWAITING_BANK_TRANSFER_PAYMENT');
                     }
                     break;
                 case 'declined':

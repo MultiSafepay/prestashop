@@ -125,9 +125,6 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             )
         );
 
-        if (Tools::getValue('gateway') == "banktrans") {
-            $transaction_data['customer']['disable_send_email'] = true;
-        }
         if (Configuration::get('MULTISAFEPAY_DEBUG')) {
             $logger = new FileLogger(0);
             $logger->setFilename(_PS_ROOT_DIR_ . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'multisafepay' . DIRECTORY_SEPARATOR . 'logs/multisafepay_cart_' . $this->context->cart->id . '.log');
@@ -185,7 +182,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                                 $helper->saveBankTransferDetails($result->gateway_info, $this->context->cart->id);
                                 $used_payment_method = $helper->getPaymentMethod($multisafepay->orders->result->data->payment_details->type);
 
-                                $this->module->validateOrder((int)$new_cart['cart']->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
+                                $this->module->validateOrder((int)$new_cart['cart']->id, Configuration::get('MULTISAFEPAY_OS_AWAITING_BANK_TRANSFER_PAYMENT'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
                                 Tools::redirect($this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect", "transactionid" => $new_cart['cart']->id), true));
                                 exit;
                             } else {
@@ -209,7 +206,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                     $helper->saveBankTransferDetails($result->gateway_info, $this->context->cart->id);
                     $used_payment_method = $helper->getPaymentMethod($multisafepay->orders->result->data->payment_details->type);
 
-                    $this->module->validateOrder((int)$this->context->cart->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
+                    $this->module->validateOrder((int)$this->context->cart->id, Configuration::get('MULTISAFEPAY_OS_AWAITING_BANK_TRANSFER_PAYMENT'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
                     Tools::redirect($this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect", "transactionid" => $this->context->cart->id), true));
                     exit;
                 } else {

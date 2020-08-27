@@ -30,6 +30,8 @@ if (!defined('_PS_VERSION_')) {
  */
 function upgrade_module_4_6_2()
 {
+    addNewOrderStatuses();
+
     // Remove Babygiftcard elements from the configuration
     $sql = "DELETE FROM " . _DB_PREFIX_ . "configuration WHERE name LIKE 'MULTISAFEPAY_GIFTCARD_babygiftcard%'";
     Db::getInstance()->execute($sql);
@@ -45,4 +47,29 @@ function upgrade_module_4_6_2()
     // Remove VVV Bon elements from the configuration
     $sql = "DELETE FROM " . _DB_PREFIX_ . "configuration WHERE name LIKE 'MULTISAFEPAY_GIFTCARD_vvvbon%'";
     return Db::getInstance()->execute($sql);
+}
+
+function addNewOrderStatuses()
+{
+    $statusCode = 'MULTISAFEPAY_OS_AWAITING_BANK_TRANSFER_PAYMENT';
+
+    if (Configuration::get($statusCode)) {
+        return;
+    }
+    $orderState = new OrderState();
+    $orderState->name = [];
+    foreach (Language::getLanguages() as $language) {
+        $orderState->name[$language['id_lang']] = 'MultiSafepay awaiting Bank transfer payment';
+    }
+
+    $orderState->send_email = false;
+    $orderState->color = '#4169E1';
+    $orderState->hidden = false;
+    $orderState->delivery = false;
+    $orderState->logable = false;
+    $orderState->invoice = false;
+    $orderState->template = '';
+    $orderState->paid = false;
+    $orderState->add();
+    Configuration::updateValue($statusCode, (int)$orderState->id);
 }

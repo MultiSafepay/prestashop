@@ -204,6 +204,15 @@ class Multisafepay extends PaymentModule
                 'paid' => false,
                 'logable' => false
             ),
+            'awaiting_bank_transfer_payment' => array(
+                'name' => 'awaiting Bank transfer payment',
+                'send_mail' => false,
+                'color' => '#4169E1',
+                'invoice' => false,
+                'template' => '',
+                'paid' => false,
+                'logable' => false
+            ),
         );
 
         foreach ($multisafepay_stats as $status => $value) {
