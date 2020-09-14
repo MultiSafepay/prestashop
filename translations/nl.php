@@ -64,8 +64,6 @@ $_MODULE['<{multisafepay}prestashop>multisafepay_1ab1dfd9dc24ea4729d6c032f7f0342
 $_MODULE['<{multisafepay}prestashop>multisafepay_49ee3087348e8d44e1feda1917443987'] = 'Naam';
 $_MODULE['<{multisafepay}prestashop>multisafepay_350e17d65ded375d643259e7eed26e2a'] = 'IBAN';
 $_MODULE['<{multisafepay}prestashop>multisafepay_65f07b5c5b5ff255fbefbc8543f33d12'] = 'Betalingskenmerk';
-$_MODULE['<{multisafepay}prestashop>checkconnection_033bd94b1168d7e4f0d644c3c95e35bf'] = 'TEST';
-$_MODULE['<{multisafepay}prestashop>checkconnection_f35d25277cc50c27cf7b5d69181dd381'] = 'LIVE';
 $_MODULE['<{multisafepay}prestashop>validation_1b471037b8d972e7a1c73f092f48314a'] = 'De afhandeling van uw betaling duurt langer dan verwacht.';
 $_MODULE['<{multisafepay}prestashop>validation_967be42836a1a4046dd3b6c724ff9280'] = 'Hierdoor kunnen wij u niet doorsturen naar de order-bevestiging pagina.';
 $_MODULE['<{multisafepay}prestashop>validation_0eda6223181a390463d976ea74be0182'] = 'U wordt doorgestuurd naar de order-historie pagina.';

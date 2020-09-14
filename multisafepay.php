@@ -22,7 +22,6 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
-use MultiSafepay\PrestaShop\helpers\CheckConnection;
 use MultiSafepay\PrestaShop\helpers\Helper;
 use MultiSafepay\PrestaShop\models\Api\MspClient;
 use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
@@ -463,14 +462,6 @@ class Multisafepay extends PaymentModule
     {
         $postMessages['errors'] = array();
         $postMessages['warnings'] = array();
-
-
-        if (Tools::isSubmit('btnSubmit') &&
-            (Configuration::get('MULTISAFEPAY_ENVIRONMENT') != Tools::getValue('MULTISAFEPAY_ENVIRONMENT') ||
-              Configuration::get('MULTISAFEPAY_API_KEY')     != Tools::getValue('MULTISAFEPAY_API_KEY'))) {
-            $postMessages['errors'] = $this->checkApiKey();
-            return $postMessages;
-        }
 
         if (Tools::isSubmit('btnGatewaysSubmit')) {
             $postMessages['warnings'] = $this->getActiveGateways();
@@ -1317,15 +1308,6 @@ class Multisafepay extends PaymentModule
             $id_gender = $customer->id_gender;
         }
         return $id_gender;
-    }
-
-
-    protected function checkApiKey()
-    {
-        $Check = new CheckConnection();
-        $error = $Check->myConnection(Tools::getValue('MULTISAFEPAY_API_KEY'), Tools::getValue('MULTISAFEPAY_ENVIRONMENT'));
-
-        return $error;
     }
 
     public function checkCurrency($cart)

@@ -69,12 +69,6 @@ $_MODULE['<{multisafepay}prestashop>multisafepay_1ab1dfd9dc24ea4729d6c032f7f0342
 $_MODULE['<{multisafepay}prestashop>multisafepay_49ee3087348e8d44e1feda1917443987'] = 'Nome';
 $_MODULE['<{multisafepay}prestashop>multisafepay_350e17d65ded375d643259e7eed26e2a'] = 'IBAN';
 $_MODULE['<{multisafepay}prestashop>multisafepay_65f07b5c5b5ff255fbefbc8543f33d12'] = 'Numero di riferimento';
-$_MODULE['<{multisafepay}prestashop>checkconnection_f23461031131d2a0acf48a6b1e603524'] = 'Errore %s, probabilmente il tuo sito non è attivo nel tuo account MultiSafepay';
-$_MODULE['<{multisafepay}prestashop>checkconnection_033bd94b1168d7e4f0d644c3c95e35bf'] = 'TEST';
-$_MODULE['<{multisafepay}prestashop>checkconnection_f35d25277cc50c27cf7b5d69181dd381'] = 'LIVE';
-$_MODULE['<{multisafepay}prestashop>checkconnection_ed64c1845511ce8b1c80ad06a11742de'] = 'La chiave API appartiene all’account %s';
-$_MODULE['<{multisafepay}prestashop>checkconnection_6727315416a9006576914d76fbbe680f'] = 'Errore %s, probabilmente la chiave API non è corretta';
-$_MODULE['<{multisafepay}prestashop>checkconnection_37801145bce8f357844db0423132a491'] = 'Errore %s. Per favore contatta MultiSafepay';
 $_MODULE['<{multisafepay}prestashop>validation_1b471037b8d972e7a1c73f092f48314a'] = 'La verifica del tuo pagamento sta richiedendo più tempo del previsto.';
 $_MODULE['<{multisafepay}prestashop>validation_967be42836a1a4046dd3b6c724ff9280'] = 'Per questo motivo, non ti possiamo reindirizzare alla pagina di conferma dell’ordine.';
 $_MODULE['<{multisafepay}prestashop>validation_0eda6223181a390463d976ea74be0182'] = 'Sarai reindirizzato alla pagina dello storico dell’ordine.';
