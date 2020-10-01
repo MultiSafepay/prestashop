@@ -75,7 +75,7 @@ class Multisafepay extends PaymentModule
         array("code" => "dotpay", "name" => "Dotpay", 'config' => true),
         array("code" => "payafter", "name" => "Betaal na Ontvangst", 'config' => true),
         array("code" => "einvoice", "name" => "E-Invoicing", 'config' => true),
-        array("code" => "klarna", "name" => "Klarna", 'config' => true),
+        array("code" => "klarna", "name" => "Klarna - Buy now, pay later", 'config' => true),
         array("code" => "mistercash", "name" => "Bancontact", 'config' => true),
         array("code" => "visa", "name" => "Visa", 'config' => true),
         array("code" => "eps", "name" => "EPS", 'config' => true),
