@@ -31,6 +31,18 @@ $(document).ready(function () {
         }
     });
 
+    $("#msp-in3-form").submit(function (event) {
+        $("#payment-confirmation button").attr("disabled", true);
+        var required_fields_in3 = ["msp-in3-birthday", "msp-in3-gender-male", "msp-in3-gender-female", "msp-in3-phone"];
+        for (i = 0; i < required_fields_in3.length; i++) {
+            if (document.getElementById(required_fields_in3[i]).checkValidity() === false) {
+                $("#payment-confirmation button").attr("disabled", false);
+                event.preventDefault();
+                $("button[type=submit]", $("#msp-in3-form")).click();
+            }
+        }
+    });
+
     $("#msp-payafter-form").submit(function (event) {
         $("#payment-confirmation button").attr("disabled", true);
         var required_fields_pad = ["msp-payafter-birthday", "msp-payafter-bankaccount", "msp-payafter-phone"];

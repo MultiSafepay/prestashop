@@ -32,7 +32,6 @@ if (!defined('_PS_VERSION_')) {
 
 class Multisafepay extends PaymentModule
 {
-
     protected $_postErrors = array();
     public $details;
     public $owner;
@@ -100,6 +99,8 @@ class Multisafepay extends PaymentModule
         array("code" => "idealqr", "name" => "iDEAL QR", 'config' => true),
         array("code" => "dbrtp", "name" => "Request to Pay", 'config' => true),
         array("code" => "applepay", "name" => "Apple Pay", 'config' => true),
+        array("code" => "in3", "name" => "in3", 'config' => true),
+
     );
 
     public function __construct()
@@ -995,6 +996,9 @@ class Multisafepay extends PaymentModule
                         case "afterpay":
                             $externalOption->setForm($this->getAfterPay());
                             break;
+                        case "in3":
+                            $externalOption->setForm($this->getIn3());
+                            break;
                         case "payafter":
                             $externalOption->setForm($this->getPayafter());
                             break;
@@ -1219,6 +1223,29 @@ class Multisafepay extends PaymentModule
         return $this->context->smarty->fetch('module:multisafepay/views/templates/front/afterpay.tpl');
     }
 
+
+    /**
+     * @return mixed
+     */
+    protected function getIn3()
+    {
+        $multisafepay_module_dir = $this->_path;
+
+        $this->context->smarty->assign([
+            'action' => $this->context->link->getModuleLink($this->name, 'payment', array('payment' => 'in3'), true),
+            'multisafepay_module_dir' => $multisafepay_module_dir,
+
+            'label_birthday' => $this->l('Birthday'),
+            'label_phone' => $this->l('Phone'),
+            'label_gender' => $this->l('Gender'),
+
+            'birthday' => $this->getBirthday(),
+            'phone' => $this->getPhoneNumber(),
+            'gender' => $this->getGender(),
+        ]);
+
+        return $this->context->smarty->fetch('module:multisafepay/views/templates/front/in3.tpl');
+    }
 
     protected function getPayafter()
     {

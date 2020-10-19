@@ -121,6 +121,16 @@ input.multisafepay{
     font-weight: normal;
 }
 
+#msp-label-gender{
+    margin-left:-24px;
+}
+#msp-input-gender{
+    margin-top:14px;
+    margin-left:14px;
+    margin-right:0px;
+    margin-bottom:2px;
+}
+
 .multisafepay-required label:after {
     color: #e32;
     content: ' *';

@@ -26,7 +26,6 @@ use MultiSafepay\PrestaShop\models\Api\MspClient;
 
 class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 {
-
     public $ssl = true;
     public $display_column_left = false;
 
@@ -422,6 +421,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 );
                 break;
             case 'afterpay':
+            case 'in3':
             case 'payafter':
             case 'einvoice':
                 $type = 'direct';
