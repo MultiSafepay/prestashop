@@ -1,3 +1,45 @@
+## 4.7.0
+Release date: October 19th, 2020
+
+### Added
++ PLGPRSS17-124: Add Good4fun Giftcard
++ DAVAMS-233: Add in3 payment method
++ PLGPRSS17-15: Add Spanish translations
++ PLGPRSS17-108: Add VVV Cadeaukaart as a giftcard
++ DAVAMS-213: Add track & trace to shipment request
+
+### Fixed
++ PLGPRSS17-125: Gateways don't show for combination of conflicting shipping methods
++ PLGPRSS17-110: Align payment method names and logo with radio buttons
++ PLGPRSS17-46: Prevent bypassing Terms & Conditions during checkout by using enter
++ PLGPRSS17-74: Encryption function was called statically instead of non-static
++ PLGPRSS17-103: Fix warning not activated payment methods on php version < 7.0
++ PLGPRSS17-41: Fix rounding issue in the shopping cart
++ PLGPRSS17-119: Prevent order is created twice
++ PLGPRSS17-112: Validate IP addresses to prevent error 1000
++ PLGPRSS17-106: Fix gateway code for Webshop Giftcard
++ PLGPRSS17-107: Fix gateway code for Fashion Giftcard
++ PLGPRSS17-115: Fix Apple Pay issue with One Page Checkout PS
++ PLGPRSS17-104: Fix VAT issue when no tax is defined
++ PLGPRSS17-111: Fix JS error on Apple Pay with non-existing form element
+
+### Changed
++ DAVAMS-315: Rebrand Klarna
++ DAVAMS-297: Rebrand Direct Bank Transfer to Request to Pay
++ PLGPRSS17-12: Bank transfer email send with MultiSafepay email systems
++ DAVAMS-285: Update name and logo for Santander
++ PLGPRSS17-120: Update Italian translations
++ PLGPRSS17-8: Remove default tax from shopping cart
++ PLGPRSS17-14: Change AfterPay from redirect to direct
++ PLGPRSS17-9: Improve address parser
+
+### Removed
++ PLGPRSS17-93: Remove automatic API key validation
++ PLGPRSS17-88: Remove unsupported giftcards from plugin
++ PLGPRSS17-118: Remove VVV Bon
+
+***
+
 ## 4.6.1
 Release date: April 17th, 2020
 
