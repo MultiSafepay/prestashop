@@ -2,24 +2,16 @@
 
 /**
  *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is provided with Prestashop in the file LICENSES.txt.
- * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
- *
  * DISCLAIMER
  *
  * Do not edit or add to this file if you wish to upgrade the MultiSafepay plugin
  * to newer versions in the future. If you wish to customize the plugin for your
- * needs please document your changes and make backups before your update.
+ * needs please document your changes and make backups before you update.
  *
  * @category    MultiSafepay
  * @package     Connect
- * @author      Tech Support <techsupport@multisafepay.com>
- * @copyright   Copyright (c) 2017 MultiSafepay, Inc. (http://www.multisafepay.com)
- * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @author      MultiSafepay <integration@multisafepay.com>
+ * @copyright   Copyright (c) MultiSafepay, Inc. (https://www.multisafepay.com)
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
@@ -34,7 +26,6 @@ use MultiSafepay\PrestaShop\models\Api\MspClient;
 
 class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 {
-
     public $ssl = true;
     public $display_column_left = false;
 
@@ -63,11 +54,8 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         $locale = Language::getLocaleByIso($lang_iso);
         $real_locale = str_replace('-', '_', $locale);
 
-        if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && $_SERVER['HTTP_X_FORWARDED_FOR']) {
-            $forwarded_ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-        } else {
-            $forwarded_ip = '';
-        }
+        $ip_address = $this->validateIP($_SERVER['REMOTE_ADDR']);
+        $forwarded_ip = $this->validateIP($_SERVER['HTTP_X_FORWARDED_FOR']);
 
         list ($items, $shopping_cart, $checkout_options) = $this->getShoppingCart();
         list ($street_billing, $house_number_billing) = $this->parseAddress($billing->address1, $billing->address2);
@@ -79,7 +67,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             "type" => $type,
             "order_id" => $this->context->cart->id,
             "currency" => $currency->iso_code,
-            "amount" => round(($this->context->cart->getOrderTotal(true, Cart::BOTH) * 100), 2),
+            "amount" => round($this->context->cart->getOrderTotal(true, Cart::BOTH), 2) * 100,
             "description" => $this->module->l('Order of Cart: ', 'payment') . $this->context->cart->id,
             "recurring_id" => $this->decryptRecurringId(),
             "var1" => "",
@@ -97,7 +85,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             ),
             "customer" => array(
                 "locale" => $real_locale,
-                "ip_address" => Tools::getRemoteAddr(),
+                "ip_address" => $ip_address,
                 "forwarded_ip" => $forwarded_ip,
                 "first_name" => $billing->firstname,
                 "last_name" => $billing->lastname,
@@ -112,7 +100,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             ),
             "delivery" => array(
                 "locale" => $real_locale,
-                "ip_address" => Tools::getRemoteAddr(),
+                "ip_address" => $ip_address,
                 "forwarded_ip" => $forwarded_ip,
                 "first_name" => $shipping->firstname,
                 "last_name" => $shipping->lastname,
@@ -131,14 +119,11 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             "plugin" => array(
                 "shop" => 'Prestashop',
                 "shop_version" => _PS_VERSION_,
-                "plugin_version" => ' - Plugin 4.6.1',
+                "plugin_version" => ' - Plugin 4.7.0',
                 "partner" => "MultiSafepay",
             )
         );
 
-        if (Tools::getValue('gateway') == "banktrans") {
-            $transaction_data['customer']['disable_send_email'] = true;
-        }
         if (Configuration::get('MULTISAFEPAY_DEBUG')) {
             $logger = new FileLogger(0);
             $logger->setFilename(_PS_ROOT_DIR_ . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'multisafepay' . DIRECTORY_SEPARATOR . 'logs/multisafepay_cart_' . $this->context->cart->id . '.log');
@@ -196,7 +181,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                                 $helper->saveBankTransferDetails($result->gateway_info, $this->context->cart->id);
                                 $used_payment_method = $helper->getPaymentMethod($multisafepay->orders->result->data->payment_details->type);
 
-                                $this->module->validateOrder((int)$new_cart['cart']->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
+                                $this->module->validateOrder((int)$new_cart['cart']->id, Configuration::get('MULTISAFEPAY_OS_AWAITING_BANK_TRANSFER_PAYMENT'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
                                 Tools::redirect($this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect", "transactionid" => $new_cart['cart']->id), true));
                                 exit;
                             } else {
@@ -220,7 +205,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                     $helper->saveBankTransferDetails($result->gateway_info, $this->context->cart->id);
                     $used_payment_method = $helper->getPaymentMethod($multisafepay->orders->result->data->payment_details->type);
 
-                    $this->module->validateOrder((int)$this->context->cart->id, Configuration::get('PS_OS_BANKWIRE'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
+                    $this->module->validateOrder((int)$this->context->cart->id, Configuration::get('MULTISAFEPAY_OS_AWAITING_BANK_TRANSFER_PAYMENT'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
                     Tools::redirect($this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect", "transactionid" => $this->context->cart->id), true));
                     exit;
                 } else {
@@ -231,6 +216,24 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             $this->errors[] = $e->getMessage();
             $this->redirectWithNotifications($this->context->link->getPageLink('order', true, null, array('step' => '3')));
         }
+    }
+
+
+    /**
+     * @param $ipAddress
+     * @return string|null
+     */
+    private function validateIP($ipAddress)
+    {
+        if (isset($ipAddress)) {
+            $ipList = explode(',', $ipAddress);
+            $ipAddress = trim(reset($ipList));
+
+            if (filter_var($ipAddress, FILTER_VALIDATE_IP)) {
+                return $ipAddress;
+            }
+        }
+        return null;
     }
 
     /*
@@ -272,15 +275,16 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
 
         $shopping_cart = array();
         $checkout_options = array();
-        $checkout_options['tax_tables']['default'] = array('shipping_taxed' => 'true', 'rate' => '0.21');
         $checkout_options['tax_tables']['alternate'][] = '';
 
         // Products
         $items = "<ul>\n";
         $products = array_merge($total_data['products'], $total_data['gift_products']);
+
         foreach ($products as $product) {
             $product_name = $product['name'];
             $merchant_item_id = $product['id_product'];
+            $tax_name = $product['tax_name'] ?: 'none';
 
             if (!empty($product['attributes_small'])) {
                 $product_name .= ' ( ' . $product['attributes_small'] . ' )';
@@ -292,15 +296,15 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             $shopping_cart['items'][] = array(
                 'name' => $product_name,
                 'description' => $product['description_short'],
-                'unit_price' => round($product['price'], 4),
+                'unit_price' => round($product['price'], 10),
                 'quantity' => $product['quantity'],
                 'merchant_item_id' => $merchant_item_id,
-                'tax_table_selector' => $product['tax_name'],
+                'tax_table_selector' => $tax_name,
                 'weight' => array('unit' => $product['weight'],
                     'value' => 'KG')
             );
             $checkout_options['tax_tables']['alternate'][] =
-                array('name' => $product['tax_name'], 'rules' => array(array('rate' => $product['rate'] / 100)));
+                array('name' => $tax_name, 'rules' => array(array('rate' => $product['rate'] / 100)));
         }
 
         $items .= "</ul>\n";
@@ -325,7 +329,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             $shopping_cart['items'][] = array(
                 'name' => 'Discount',
                 'description' => $this->module->l('Discount', 'payment'),
-                'unit_price' => round(-$total_data['total_discounts'], 4),
+                'unit_price' => round(-$total_data['total_discounts'], 10),
                 'quantity' => 1,
                 'merchant_item_id' => 'Discount',
                 'tax_table_selector' => 'Discount',
@@ -340,7 +344,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             $shopping_cart['items'][] = array(
                 'name' => 'Wrapping',
                 'description' => $this->module->l('Wrapping', 'payment'),
-                'unit_price' => round($total_data['total_wrapping_tax_exc'], 4),
+                'unit_price' => round($total_data['total_wrapping_tax_exc'], 10),
                 'quantity' => 1,
                 'merchant_item_id' => 'Wrapping',
                 'tax_table_selector' => 'Wrapping',
@@ -356,7 +360,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             $shopping_cart['items'][] = array(
                 'name' => 'Shipping',
                 'description' => $this->module->l('Shipping', 'payment'),
-                'unit_price' => round($total_data['total_shipping_tax_exc'], 4),
+                'unit_price' => round($total_data['total_shipping_tax_exc'], 10),
                 'quantity' => 1,
                 'merchant_item_id' => 'msp-shipping',
                 'tax_table_selector' => 'Shipping',
@@ -370,22 +374,38 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         return array($items, $shopping_cart, $checkout_options);
     }
 
+    /**
+     * Split the address into street and house number with extension.
+     *
+     * @param string $address1
+     * @param string $address2
+     * @return array
+     */
     private function parseAddress($address1, $address2 = '')
     {
+        // Trim the addresses
         $address1 = trim($address1);
         $address2 = trim($address2);
-        $adress = trim($address1 . ' ' . $address2);
+        $fullAddress = trim("{$address1} {$address2}");
+        $fullAddress = preg_replace("/[[:blank:]]+/", ' ', $fullAddress);
 
-        $aMatch = array();
-        $pattern = '#^(.*?)([0-9]{1,5})([\w[:punct:]\-/]*)$#';
-        $matchResult = preg_match($pattern, $adress, $aMatch);
+        // Make array of all regex matches
+        $matches = array();
 
-        $street = (isset($aMatch[1])) ? $aMatch[1] : '';
-        $apartment = (isset($aMatch[2])) ? $aMatch[2] : '';
-        $apartment .= (isset($aMatch[3]) && $aMatch[3] != $aMatch[2]) ? $aMatch[3] : '';
+        /**
+         * Regex part one: Add all before number.
+         * If number contains whitespace, Add it also to street.
+         * All after that will be added to apartment
+         */
+        $pattern = '/(.+?)\s?([\d]+[\S]*)(\s?[A-z]*?)$/';
+        preg_match($pattern, $fullAddress, $matches);
 
+        //Save the street and apartment and trim the result
+        $street = isset($matches[1]) ? $matches[1] : '';
+        $apartment = isset($matches[2]) ? $matches[2] : '';
+        $extension = isset($matches[3]) ? $matches[3] : '';
         $street = trim($street);
-        $apartment = trim($apartment);
+        $apartment = trim($apartment . $extension);
 
         return array($street, $apartment);
     }
@@ -400,6 +420,8 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                     "issuer_id" => Tools::getValue('issuer')
                 );
                 break;
+            case 'afterpay':
+            case 'in3':
             case 'payafter':
             case 'einvoice':
                 $type = 'direct';
@@ -440,10 +462,15 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         return (array($type, $gateway_info));
     }
 
+    /**
+     * @return mixed
+     */
     private function decryptRecurringId()
     {
+        $phpEncryption = new PhpEncryption(_NEW_COOKIE_KEY_);
+
         $recurringId = pSQL(Tools::getValue('saved_cc'));
-        return PhpEncryptionCore::decrypt($recurringId);
+        return $phpEncryption->decrypt($recurringId);
     }
 
 

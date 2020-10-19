@@ -121,6 +121,16 @@ input.multisafepay{
     font-weight: normal;
 }
 
+#msp-label-gender{
+    margin-left:-24px;
+}
+#msp-input-gender{
+    margin-top:14px;
+    margin-left:14px;
+    margin-right:0px;
+    margin-bottom:2px;
+}
+
 .multisafepay-required label:after {
     color: #e32;
     content: ' *';
@@ -147,3 +157,29 @@ input.multisafepay{
     margin: 10px 0px 0px 0px;
 }
 
+label.multisafepay-gender {
+    float: left;
+    clear: none;
+    display: block;
+    padding: 0px 1em 0px 8px;
+}
+
+input.multisafepay-gender[type=radio],
+input.multisafepay-gender.radio {
+    float: left;
+    clear: none;
+    margin: 5px 0 0 2px;
+}
+
+.payment-options .payment-option {
+    align-items: center;
+    display: flex;
+}
+
+.payment-options .payment-option label {
+    margin-bottom: 0;
+}
+
+.payment-options .payment-option label img {
+    padding-left: .5em;
+}

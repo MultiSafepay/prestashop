@@ -1,24 +1,16 @@
 <?php
 /**
  *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is provided with Prestashop in the file LICENSES.txt.
- * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
- *
  * DISCLAIMER
  *
  * Do not edit or add to this file if you wish to upgrade the MultiSafepay plugin
  * to newer versions in the future. If you wish to customize the plugin for your
- * needs please document your changes and make backups before your update.
+ * needs please document your changes and make backups before you update.
  *
  * @category    MultiSafepay
  * @package     Connect
- * @author      Tech Support <techsupport@multisafepay.com>
- * @copyright   Copyright (c) 2017 MultiSafepay, Inc. (http://www.multisafepay.com)
- * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @author      MultiSafepay <integration@multisafepay.com>
+ * @copyright   Copyright (c) MultiSafepay, Inc. (https://www.multisafepay.com)
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
@@ -48,6 +40,11 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
         $this->lock_file = _PS_MODULE_DIR_ . 'multisafepay' . DIRECTORY_SEPARATOR . 'locks' . DIRECTORY_SEPARATOR . 'multisafepay_cart_' . $cart_id . '.lock';
         $tries = 1;
 
+        // Sometimes the redirect- and notification url are triggered at the exact same time, causing double orders.
+        // Now hold redirect for 1 sec. to give notification the change to execute first.
+        if ($type == "redirect") {
+            sleep(1);
+        }
 
         // if order exists but the payment is not processed by MultiSafepay
         $order = new Order(Order::getOrderByCartId((int) $cart_id));
@@ -122,7 +119,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                         $this->create_order = false;
                         if ($this->transaction->payment_details->type == 'BANKTRANS') {
                             $this->create_order = true;
-                            $this->order_status = Configuration::get('PS_OS_BANKWIRE');
+                            $this->order_status = Configuration::get('MULTISAFEPAY_OS_AWAITING_BANK_TRANSFER_PAYMENT');
                             $this->update_order = false;
                         }
                         break;
@@ -172,7 +169,7 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                     $this->create_order = false;
                     if ($this->transaction->payment_details->type == 'BANKTRANS') {
                         $this->create_order = true;
-                        $this->order_status = Configuration::get('PS_OS_BANKWIRE');
+                        $this->order_status = Configuration::get('MULTISAFEPAY_OS_AWAITING_BANK_TRANSFER_PAYMENT');
                     }
                     break;
                 case 'declined':
@@ -330,12 +327,14 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
     private function updateTokenization()
     {
         if (isset($this->transaction->payment_details->type)
-        && isset($this->transaction->payment_details->last4)
-        && isset($this->transaction->payment_details->card_expiry_date)) {
+            && isset($this->transaction->payment_details->last4)
+            && isset($this->transaction->payment_details->card_expiry_date)) {
+            $phpEncryption = new PhpEncryption(_NEW_COOKIE_KEY_);
+
             Db::getInstance()->update(
                 'multisafepay_tokenization',
                 array(
-                    'recurring_id' => PhpEncryptionCore::encrypt($this->transaction->payment_details->recurring_id),
+                    'recurring_id' => $phpEncryption->encrypt($this->transaction->payment_details->recurring_id),
                     'cc_type' => $this->transaction->payment_details->type,
                     'cc_last4' => $this->transaction->payment_details->last4,
                     'cc_expiry_date' => $this->transaction->payment_details->card_expiry_date,

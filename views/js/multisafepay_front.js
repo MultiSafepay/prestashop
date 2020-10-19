@@ -1,4 +1,23 @@
 $(document).ready(function () {
+    $("#msp-afterpay-form, #msp-payafter-form, #msp-einvoice-form, #msp-ideal-form").keypress(
+        function (event) {
+            if (event.which === 13) { // ENTER
+                event.preventDefault();
+            }
+        }
+    );
+
+    $("#msp-afterpay-form").submit(function (event) {
+        $("#payment-confirmation button").attr("disabled", true);
+        var required_fields_afterpay = ["msp-afterpay-birthday", "msp-afterpay-phone"];
+        for (i = 0; i < required_fields_afterpay.length; i++) {
+            if (document.getElementById(required_fields_afterpay[i]).checkValidity() === false) {
+                $("#payment-confirmation button").attr("disabled", false);
+                event.preventDefault();
+                $("button[type=submit]", $("#msp-afterpay-form")).click();
+            }
+        }
+    });
 
     $("#msp-einvoice-form").submit(function (event) {
         $("#payment-confirmation button").attr("disabled", true);
@@ -8,6 +27,18 @@ $(document).ready(function () {
                 $("#payment-confirmation button").attr("disabled", false);
                 event.preventDefault();
                 $("button[type=submit]", $("#msp-einvoice-form")).click();
+            }
+        }
+    });
+
+    $("#msp-in3-form").submit(function (event) {
+        $("#payment-confirmation button").attr("disabled", true);
+        var required_fields_in3 = ["msp-in3-birthday", "msp-in3-gender-male", "msp-in3-gender-female", "msp-in3-phone"];
+        for (i = 0; i < required_fields_in3.length; i++) {
+            if (document.getElementById(required_fields_in3[i]).checkValidity() === false) {
+                $("#payment-confirmation button").attr("disabled", false);
+                event.preventDefault();
+                $("button[type=submit]", $("#msp-in3-form")).click();
             }
         }
     });
