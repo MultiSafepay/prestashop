@@ -28,7 +28,7 @@ if (!defined('_PS_VERSION_')) {
 /**
  * @return mixed
  */
-function upgrade_module_4_6_2()
+function upgrade_module_4_7_0()
 {
     addNewOrderStatuses();
 
