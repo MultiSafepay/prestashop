@@ -63,7 +63,8 @@ class Multisafepay extends PaymentModule
         array("code" => "fietsenbon", "name" => "Fietsenbon", 'config' => true),
         array("code" => "wellnessgiftcard", "name" => "Wellnessgiftcard", 'config' => true),
         array("code" => "winkelcheque", "name" => "Winkelcheque", 'config' => true),
-        array("code" => "givacard", "name" => "Givacard", 'config' => true)
+        array("code" => "givacard", "name" => "Givacard", 'config' => true),
+        array("code" => "good4fun", "name" => "Good4fun Giftcard", 'config' => true),
     );
 
     /*
