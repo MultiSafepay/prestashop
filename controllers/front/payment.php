@@ -57,11 +57,12 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         $ip_address = $this->validateIP($_SERVER['REMOTE_ADDR']);
         $forwarded_ip = $this->validateIP($_SERVER['HTTP_X_FORWARDED_FOR']);
 
-        list ($items, $shopping_cart, $checkout_options) = $this->getShoppingCart();
-        list ($street_billing, $house_number_billing) = $this->parseAddress($billing->address1, $billing->address2);
-        list ($street_shipping, $house_number_shipping) = $this->parseAddress($shipping->address1, $shipping->address2);
 
-        list ($type, $gateway_info) = $this->getTypeAndGatewayInfo($customer);
+        list($items, $shopping_cart, $checkout_options) = $this->getShoppingCart();
+        list($street_billing, $house_number_billing) = $this->parseAddress($billing->address1, $billing->address2);
+        list($street_shipping, $house_number_shipping) = $this->parseAddress($shipping->address1, $shipping->address2);
+
+        list($type, $gateway_info) = $this->getTypeAndGatewayInfo($customer);
 
         $transaction_data = array(
             "type" => $type,
@@ -78,8 +79,8 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             "gateway" => Tools::getValue('gateway'),
             "seconds_active" => $this->getSecondsActive(),
             "payment_options" => array(
-                "notification_url" => $this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "notification"), true),
-                "redirect_url" => $this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect"), true),
+                "notification_url" => $this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id), true),
+                "redirect_url" => $this->context->link->getModuleLink($this->module->name, 'redirect', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id), true),
                 "cancel_url" => $this->context->link->getPageLink('order', true, null, array('step' => '3')),
                 "close_window" => "true"
             ),
@@ -127,7 +128,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         if (Configuration::get('MULTISAFEPAY_DEBUG')) {
             $logger = new FileLogger(0);
             $logger->setFilename(_PS_ROOT_DIR_ . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'multisafepay' . DIRECTORY_SEPARATOR . 'logs/multisafepay_cart_' . $this->context->cart->id . '.log');
-            $logger->logDebug("Request data -------------------------");
+            $logger->logDebug("Transaction-data -------------------------");
             $logger->logDebug($transaction_data);
         }
 
@@ -141,83 +142,12 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 $logger->logDebug("Response -------------------------");
                 $logger->logDebug($result);
             }
-
-            if (!empty($multisafepay->orders->result->error_code)) {
-                //When a consumer cancels the order, the cart is still active and this will cause the cart->id to be used when placing a new transaction. For these situations we will duplicate the cart and use the new cart->id once if a 1006 transaction exists error occurs.
-                if ($multisafepay->orders->result->error_code == '1006') {
-                    $new_cart = $this->context->cart->duplicate();
-                    if (!$new_cart || !Validate::isLoadedObject($new_cart['cart'])) {
-                        $this->errors[] = Tools::displayError($this->module->l('Transaction request failed because the cart ID was already used and we couldn\'t create a new cart.', 'payment'));
-                    } elseif (!$new_cart['success']) {
-                        $this->errors[] = Tools::displayError($this->module->l('Transaction request failed because the cart ID was already used and we couldn\'t create a new cart because the products are no longer available.', 'payment'));
-                    } else {
-                        //Remove the old cart as this can't be used for a MultiSafepay transaction request anymore.
-                        $this->context->cart->delete();
-
-                        //SET the new cart active in context
-                        $this->context->cookie->id_cart = $new_cart['cart']->id;
-                        $context = $this->context;
-                        $context->cart = $new_cart['cart'];
-                        CartRule::autoAddToCart($context);
-                        $this->context->cookie->write();
-
-                        //Update the transaction data with the new cart ID
-                        $transaction_data['order_id'] = $new_cart['cart']->id;
-
-                        $result = $multisafepay->orders->post($transaction_data);
-                        if (!empty($multisafepay->orders->result->error_code)) {
-                            $this->errors[] = $this->module->l('There was an error processing your transaction request, please try again with another payment method. Error: ', 'payment') . $multisafepay->orders->result->error_code . ' - ' . $multisafepay->orders->result->error_info;
-                            $this->redirectWithNotifications($this->context->link->getPageLink('order', true, null, array('step' => '3')));
-                        } else {
-                            //For bank transfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wire transfer email from PrestaShop and provide the payment data.
-                            if (Tools::getValue('gateway') == "banktrans") {
-                                $mailVars = array(
-                                    '{bankwire_owner}' => $result->gateway_info->destination_holder_name,
-                                    '{bankwire_details}' => $result->gateway_info->destination_holder_iban,
-                                    '{bankwire_address}' => $this->module->l('Payment reference : ', 'payment') . $result->gateway_info->reference
-                                );
-
-                                $helper = new Helper;
-                                $helper->saveBankTransferDetails($result->gateway_info, $this->context->cart->id);
-                                $used_payment_method = $helper->getPaymentMethod($multisafepay->orders->result->data->payment_details->type);
-
-                                $this->module->validateOrder((int)$new_cart['cart']->id, Configuration::get('MULTISAFEPAY_OS_AWAITING_BANK_TRANSFER_PAYMENT'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
-                                Tools::redirect($this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect", "transactionid" => $new_cart['cart']->id), true));
-                                exit;
-                            } else {
-                                Tools::redirectLink($multisafepay->orders->getPaymentLink());
-                            }
-                        }
-                    }
-                }
-                $this->errors[] = $this->module->l('There was an error processing your transaction request, please try again with another payment method. Error: ', 'payment') . $multisafepay->orders->result->error_code . ' - ' . $multisafepay->orders->result->error_info;
-                $this->redirectWithNotifications($this->context->link->getPageLink('order', true, null, array('step' => '3')));
-            } else {
-                //For bank transfer we use a direct transaction, this means we do not redirect to Multisafepay. We use the default wire transfer email from PrestaShop and provide the payment data.
-                if (Tools::getValue('gateway') == "banktrans") {
-                    $mailVars = array(
-                        '{bankwire_owner}' => $result->gateway_info->destination_holder_name,
-                        '{bankwire_details}' => $result->gateway_info->destination_holder_iban,
-                        '{bankwire_address}' => $this->module->l('Payment reference : ', 'payment') . $result->gateway_info->reference
-                    );
-
-                    $helper = new Helper;
-                    $helper->saveBankTransferDetails($result->gateway_info, $this->context->cart->id);
-                    $used_payment_method = $helper->getPaymentMethod($multisafepay->orders->result->data->payment_details->type);
-
-                    $this->module->validateOrder((int)$this->context->cart->id, Configuration::get('MULTISAFEPAY_OS_AWAITING_BANK_TRANSFER_PAYMENT'), $this->context->cart->getOrderTotal(true, Cart::BOTH), $used_payment_method, null, $mailVars, (int)$currency->id, false, $customer->secure_key);
-                    Tools::redirect($this->context->link->getModuleLink($this->module->name, 'validation', array("key" => $this->context->customer->secure_key, "id_module" => $this->module->id, "type" => "redirect", "transactionid" => $this->context->cart->id), true));
-                    exit;
-                } else {
-                    Tools::redirectLink($multisafepay->orders->getPaymentLink());
-                }
-            }
+            Tools::redirectLink($multisafepay->orders->getPaymentLink());
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
             $this->redirectWithNotifications($this->context->link->getPageLink('order', true, null, array('step' => '3')));
         }
     }
-
 
     /**
      * @param $ipAddress
