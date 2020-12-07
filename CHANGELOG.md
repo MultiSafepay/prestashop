@@ -1,3 +1,11 @@
+## 4.7.1
+Release date: December 7th, 2020
+
+### Fixed
++ PLGPRSS17-16: Refactor order creation flow to prevent double orders
+
+***
+
 ## 4.7.0
 Release date: October 19th, 2020
 

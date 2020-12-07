@@ -26,19 +26,16 @@ use MultiSafepay\PrestaShop\models\Api\MspClient;
 class MultisafepayValidationModuleFrontController extends ModuleFrontController
 {
 
-    private $timeToWait = 5;
-    protected $lock_file;
     protected $transaction;
-    protected $create_order = false;
-    protected $update_order = false;
+    protected $orderStatus = array();
     protected $order_status = false;
+    protected $total;
+    protected $paid;
 
     public function postProcess()
     {
         $cart_id = Tools::getValue('transactionid');
         $type = Tools::getValue('type');
-        $this->lock_file = _PS_MODULE_DIR_ . 'multisafepay' . DIRECTORY_SEPARATOR . 'locks' . DIRECTORY_SEPARATOR . 'multisafepay_cart_' . $cart_id . '.lock';
-        $tries = 1;
 
         // Sometimes the redirect- and notification url are triggered at the exact same time, causing double orders.
         // Now hold redirect for 1 sec. to give notification the change to execute first.
@@ -47,9 +44,10 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
         }
 
         // if order exists but the payment is not processed by MultiSafepay
-        $order = new Order(Order::getOrderByCartId((int) $cart_id));
+        $order = new Order(Order::getIdByCartId((int)$cart_id));
         if ($order->module && $order->module != 'multisafepay') {
-            exit("Not a MultiSafepay order");
+            echo 'ok';
+            exit;
         }
 
         $cart = new Cart($cart_id);
@@ -61,218 +59,33 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
             Tools::redirect('index.php?controller=order&step=1');
         }
 
-        while ($tries < $this->timeToWait) {
-            if (file_exists($this->lock_file)) {
-                sleep(1);
-                $tries++;
-            } else {
-                fopen($this->lock_file, "w");
-                $tries = 99;
-            }
-        }
-
-        if ($tries == $this->timeToWait) {
-            $this->unlock();
-            if ($type == "notification") {
-                die('ng');
-            } else {
-                $this->errors[] = $this->module->l('The verification of your payment takes more time than expected.', 'validation');
-                $this->errors[] = $this->module->l('Therefore we cannot redirect you to the order confirmation page.', 'validation');
-                $this->errors[] = $this->module->l('You are redirected to the order history page instead.', 'validation');
-                $this->errors[] = $this->module->l('Because of this it can take some minutes before your new order will be visible within your account.', 'validation');
-                $this->redirectWithNotifications($this->context->link->getPageLink('history', true, null, array()));
-            }
-        }
-
         $multisafepay = new MspClient();
-        $environment = Configuration::get('MULTISAFEPAY_ENVIRONMENT');
-        $multisafepay->initialize($environment, Configuration::get('MULTISAFEPAY_API_KEY'));
+        $multisafepay->initialize(
+            Configuration::get('MULTISAFEPAY_ENVIRONMENT'),
+            Configuration::get('MULTISAFEPAY_API_KEY')
+        );
 
         $this->transaction = $multisafepay->orders->get($endpoint = 'orders', $cart_id, $body = array(), $query_string = false);
 
         if (Configuration::get('MULTISAFEPAY_DEBUG')) {
             $logger = new FileLogger(0);
             $logger->setFilename(_PS_MODULE_DIR_ . 'multisafepay' . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'multisafepay_cart_' . $cart_id . '.log');
-            $logger->logDebug("Status Request data -------------------------");
+            $logger->logDebug("Transaction-data -------------------------");
             $logger->logDebug($this->transaction);
         }
 
 
+        $this->total = (float)$cart->getOrderTotal(true, Cart::BOTH);
+        $this->paid = (float)($this->transaction->amount / 100);
 
-        $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
-        $paid  = (float)($this->transaction->amount / 100);
-        $order = new Order(Order::getOrderByCartId((int) $cart_id));
+        $this->order_status = $this->setStatus();
 
-        if ($type == "redirect") {
-            if (isset($order->id_cart) && $order->id_cart > 0) {
-                $url = "index.php?controller=order-confirmation"
-                        . '&key=' . $order->secure_key
-                        . '&id_cart=' . $order->id_cart
-                        . '&id_module=' . Tools::getValue('id_module')
-                        . '&id_order=' . $order->id;
-                $this->unlock();
-                Tools::redirect($url);
-                exit;
-            } else {
-                switch ($this->transaction->status) {
-                    case 'initialized':
-                        $this->create_order = false;
-                        if ($this->transaction->payment_details->type == 'BANKTRANS') {
-                            $this->create_order = true;
-                            $this->order_status = Configuration::get('MULTISAFEPAY_OS_AWAITING_BANK_TRANSFER_PAYMENT');
-                            $this->update_order = false;
-                        }
-                        break;
-                    case 'completed':
-                        $this->create_order = true;
-                        $this->order_status = Configuration::get('PS_OS_PAYMENT');
-                        break;
-                    case 'uncleared':
-                        $this->create_order = true;
-                        $this->order_status = Configuration::get('MULTISAFEPAY_OS_UNCLEARED');
-                        break;
-                    default:
-                        $this->create_order = false;
-                        $this->order_status = Configuration::get('PS_OS_ERROR');
-                        break;
-                }
-
-                if ($this->create_order) {
-                    if ($paid != $total) {
-                        $this->order_status = Configuration::get('PS_OS_ERROR');
-                    }
-
-                    $extra_properties = array('transaction_id' => $this->transaction->transaction_id);
-
-                    $helper = new Helper;
-                    $used_payment_method = $helper->getPaymentMethod($this->transaction->payment_details->type);
-
-                    $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $used_payment_method, null, $extra_properties, (int) $cart->id_currency, false, $customer->secure_key);
-                    $order = new Order(Order::getOrderByCartId((int) $cart_id));
-                    if ($paid != $total) {
-                         $this->addMessage($order, $customer);
-                    }
-
-                    $this->unlock();
-                    Tools::redirect('index.php?controller=order-confirmation&id_cart=' . (int) $cart->id . '&id_module=' . (int) $this->module->id . '&id_order=' . $order->id . '&key=' . $customer->secure_key);
-                    exit;
-                } else {
-                    $this->errors[] = $this->module->l('Your transaction was processed, but the correct transaction status couldn\'t not be determined and you are redirected to your order history page instead of the order confirmation page. Transaction status:', 'validation') . $this->transaction->status;
-                    $this->unlock();
-                    $this->redirectWithNotifications($this->context->link->getPageLink('history', true, null, array()));
-                    exit;
-                }
-            }
+        if (isset($order->id_cart) && $order->id_cart > 0) {
+            $this->updateOrderStatus($order);
         } else {
-            switch ($this->transaction->status) {
-                case 'initialized':
-                    $this->create_order = false;
-                    if ($this->transaction->payment_details->type == 'BANKTRANS') {
-                        $this->create_order = true;
-                        $this->order_status = Configuration::get('MULTISAFEPAY_OS_AWAITING_BANK_TRANSFER_PAYMENT');
-                    }
-                    break;
-                case 'declined':
-                    $this->create_order = false;
-                    $this->order_status = Configuration::get('PS_OS_CANCELED');
-                    break;
-                case 'cancelled':
-                    $this->create_order = false;
-                    $this->order_status = Configuration::get('PS_OS_CANCELED');
-                    break;
-                case 'completed':
-                    $this->create_order = true;
-                    $this->order_status = Configuration::get('PS_OS_PAYMENT');
-                    break;
-                case 'expired':
-                    $this->create_order = false;
-                    $this->order_status = Configuration::get('PS_OS_CANCELED');
-                    break;
-                case 'uncleared':
-                    $this->create_order = true;
-                    $this->order_status = Configuration::get('MULTISAFEPAY_OS_UNCLEARED');
-                    break;
-                case 'refunded':
-                    $this->create_order = false;
-                    $this->order_status = Configuration::get('PS_OS_REFUND');
-                    break;
-                case 'partial_refunded':
-                    $this->order_status = Configuration::get('MULTISAFEPAY_OS_PARTIAL_REFUNDED');
-                    $this->create_order = false;
-                    break;
-                case 'void':
-                    $this->create_order = false;
-                    $this->order_status = Configuration::get('PS_OS_CANCELED');
-                    break;
-
-                case 'chargedback':
-                    $this->create_order = false;
-                    $this->order_status = Configuration::get('MULTISAFEPAY_OS_CHARGEBACK');
-                    break;
-
-                case 'shipped':
-                    $this->create_order = false;
-                    $this->order_status = Configuration::get('PS_OS_SHIPPING');
-                    break;
-
-                default:
-                    $this->create_order = false;
-                    $this->order_status = Configuration::get('PS_OS_ERROR');
-                    break;
-            }
-
-            if (isset($order->id_cart) && $order->id_cart > 0) {
-                if ($paid == $total) {
-                    $status_history = Db::getInstance()->ExecuteS('SELECT * FROM `' . _DB_PREFIX_ . 'order_history` WHERE `id_order` = ' . (int) $order->id);
-                    //Get all previous order stats, if status is not yet added to the order in the past then we update, else the update was already done and the status was changes after and updating it can give a conflict with other processing flows.
-                    $status_in_history = false;
-
-                    foreach ($status_history as $key => $status) {
-                        if ($status['id_order_state'] == $this->order_status) {
-                            //status for the update is already in the history, so we don't update
-                            $status_in_history = true;
-                        }
-                    }
-
-
-                    //status was not in history so lets update the order
-                    if (!$status_in_history) {
-                        $history = new OrderHistory();
-                        $history->id_order = (int) $order->id;
-
-                        if ($order->getCurrentState() != $this->order_status) {
-                            $history->changeIdOrderState((int) $this->order_status, $order->id);
-                            $history->add();
-                        }
-
-                        if ($this->transaction->status == 'completed') {
-                            $payments = $order->getOrderPaymentCollection();
-                            $payments[0]->transaction_id = $this->transaction->transaction_id;
-                            $payments[0]->update();
-                        }
-                    }
-                }
-            } else {
-                if ($this->create_order) {
-                    if ($paid != $total) {
-                        $this->order_status = Configuration::get('PS_OS_ERROR');
-                    }
-
-                    $extra_properties = array('transaction_id' => $this->transaction->transaction_id);
-
-                    $helper = new Helper;
-                    $used_payment_method = $helper->getPaymentMethod($this->transaction->payment_details->type);
-
-                    $this->module->validateOrder((int) $cart_id, $this->order_status, $paid, $used_payment_method, null, $extra_properties, (int) $cart->id_currency, false, $customer->secure_key);
-                    $order = new Order(Order::getOrderByCartId((int) $cart_id));
-                    if ($paid != $total) {
-                         $this->addMessage($order, $customer);
-                    }
-                }
-            }
+            $this->createOrder($cart, $customer);
         }
 
-        $this->unlock();
         if (Configuration::get('MULTISAFEPAY_ENABLE_TOKEN')) {
             $this->updateTokenization();
         }
@@ -280,13 +93,74 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
         exit;
     }
 
+    /**
+     * @param $cart
+     * @param $customer
+     */
+    private function createOrder($cart, $customer)
+    {
+        if (!$this->allowOrderCreation()) {
+            return;
+        }
+
+        if ($this->paid !== $this->total) {
+            $this->order_status = Configuration::get('PS_OS_ERROR');
+        }
+
+        $helper = new Helper;
+        $used_payment_method = $helper->getPaymentMethod($this->transaction->payment_details->type);
+        $extra_properties = array('transaction_id' => $this->transaction->transaction_id);
+
+        $this->module->validateOrder((int)$cart->id, $this->order_status, $this->paid, $used_payment_method, null, $extra_properties, (int)$cart->id_currency, false, $customer->secure_key);
+        $order = new Order(Order::getIdByCartId((int)$cart->id));
+        if ($this->paid !== $this->total) {
+            $this->addMessage($order, $customer);
+        }
+    }
+
+    /**
+     * @param $order
+     */
+    private function updateOrderStatus($order)
+    {
+        if ($this->paid !== $this->total) {
+            return;
+        }
+
+        // Do not update the orderstatus if the new order status is already been added in the past
+        $statusHistory = Db::getInstance()->ExecuteS('SELECT * FROM `' . _DB_PREFIX_ . 'order_history` WHERE `id_order` = ' . (int)$order->id);
+        $statusUpdateAllowed = true;
+
+        foreach ($statusHistory as $key => $status) {
+            if ($status['id_order_state'] === $this->order_status) {
+                $statusUpdateAllowed = false;
+                break;
+            }
+        }
+
+        if ($statusUpdateAllowed) {
+            $history = new OrderHistory();
+            $history->id_order = (int)$order->id;
+
+            if ($order->getCurrentState() !== $this->order_status) {
+                $history->changeIdOrderState((int)$this->order_status, $order->id);
+                $history->add();
+            }
+
+            if ($this->transaction->status == 'completed') {
+                $payments = $order->getOrderPaymentCollection();
+                $payments[0]->transaction_id = $this->transaction->transaction_id;
+                $payments[0]->update();
+            }
+        }
+    }
 
     private function addMessage($order, $customer)
     {
         $message = $this->module->l('A payment error occurred.', 'validation') . "\r\n" .
-                   $this->module->l('The order amount differs from the amount paid.', 'validation') . "\r\n" .
-                   $this->module->l('This often happens when the payment is done through a second chance mail and the shopping cart has changed after the first payment attempt.', 'validation') . "\r\n" .
-                   $this->module->l('Payment has been made for the following item(s):', 'validation') . "\r\n";
+            $this->module->l('The order amount differs from the amount paid.', 'validation') . "\r\n" .
+            $this->module->l('This often happens when the payment is done through a second chance mail and the shopping cart has changed after the first payment attempt.', 'validation') . "\r\n" .
+            $this->module->l('Payment has been made for the following item(s):', 'validation') . "\r\n";
 
         foreach ($this->transaction->shopping_cart->items as $item => $product) {
             $message .= sprintf("%d x %s \r\n", $product->quantity, $product->name);
@@ -316,14 +190,6 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
     }
 
 
-    private function unlock()
-    {
-        if (file_exists($this->lock_file)) {
-            unlink($this->lock_file);
-        }
-    }
-
-
     private function updateTokenization()
     {
         if (isset($this->transaction->payment_details->type)
@@ -342,5 +208,41 @@ class MultisafepayValidationModuleFrontController extends ModuleFrontController
                 'order_id = ' . pSQL(Tools::getValue('transactionid'))
             );
         }
+    }
+
+    private function setStatus()
+    {
+        $orderStatus = array(
+            'initialized' => Configuration::get('MULTISAFEPAY_OS_AWAITING_BANK_TRANSFER_PAYMENT'),
+            'declined' => Configuration::get('PS_OS_CANCELED'),
+            'cancelled' => Configuration::get('PS_OS_CANCELED'),
+            'completed' => Configuration::get('PS_OS_PAYMENT'),
+            'expired' => Configuration::get('PS_OS_CANCELED'),
+            'uncleared' => Configuration::get('MULTISAFEPAY_OS_UNCLEARED'),
+            'refunded' => Configuration::get('PS_OS_REFUND'),
+            'partial_refunded' => Configuration::get('MULTISAFEPAY_OS_PARTIAL_REFUNDED'),
+            'void' => Configuration::get('PS_OS_CANCELED'),
+            'chargedback' => Configuration::get('MULTISAFEPAY_OS_CHARGEBACK'),
+            'shipped' => Configuration::get('PS_OS_SHIPPING')
+        );
+        return isset($orderStatus[$this->transaction->status]) ? $orderStatus[$this->transaction->status] : Configuration::get('PS_OS_ERROR');
+    }
+
+    private function allowOrderCreation()
+    {
+        $allowOrderCreation = false;
+
+        switch ($this->transaction->status) {
+            case 'initialized':
+                if ($this->transaction->payment_details->type === 'BANKTRANS') {
+                    $allowOrderCreation = true;
+                }
+                break;
+            case 'completed':
+            case 'uncleared':
+                $allowOrderCreation = true;
+                break;
+        }
+        return $allowOrderCreation;
     }
 }
