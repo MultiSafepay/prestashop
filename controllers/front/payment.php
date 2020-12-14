@@ -365,6 +365,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 break;
             case 'banktrans':
             case 'ing':
+            case 'cbc':
             case 'kbc':
             case 'paypal':
             case 'santander':

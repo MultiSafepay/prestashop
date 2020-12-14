@@ -103,6 +103,7 @@ class Multisafepay extends PaymentModule
         array("code" => "dbrtp", "name" => "Request to Pay", 'config' => true),
         array("code" => "applepay", "name" => "Apple Pay", 'config' => true),
         array("code" => "in3", "name" => "in3", 'config' => true),
+        array("code" => "cbc", "name" => "CBC", 'config' => true),
 
     );
 
