@@ -7,9 +7,11 @@
   <div class="panel">
     {foreach from=$giftcards key=sort item=giftcard}
       <div class="form-group">
+
         <div class="col-lg-2 logo-wrapper">
-          <img src="{$path|escape:'htmlall':'UTF-8'}views/images/giftcards/{$locale}/{$giftcard.code|escape:'htmlall':'UTF-8'}.png" alt="{$giftcard.code|escape:'htmlall':'UTF-8'}" class="paymentlogo">
+          <img src="{$giftcard.logo|escape:'htmlall':'UTF-8'}"  alt="{$giftcard.code|escape:'htmlall':'UTF-8'}" class="paymentlogo" />
         </div>
+
         <div class="col-lg-3">
           <div class="col-lg-4 control-label switch-label">{$giftcard.name}</div>
           <div class="col-lg-6 switch prestashop-switch fixed-width-lg">

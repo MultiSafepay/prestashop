@@ -7,9 +7,11 @@
   <div class="panel">
     {foreach from=$gateways key=sort item=payment}
       <div class="form-group">
+
         <div class="col-lg-2 logo-wrapper">
-          <img src="{$path|escape:'htmlall':'UTF-8'}views/images/gateways/{$locale}/{$payment.code|escape:'htmlall':'UTF-8'}.png" alt="{$payment.code|escape:'htmlall':'UTF-8'}" class="paymentlogo">
+          <img src="{$payment.logo|escape:'htmlall':'UTF-8'}"  alt="{$payment.code|escape:'htmlall':'UTF-8'}" class="paymentlogo" />
         </div>
+
         <div class="col-lg-3">
           <div class="col-lg-4 control-label switch-label">{$payment.name}</div>
           <div class="col-lg-6 switch prestashop-switch fixed-width-lg">
