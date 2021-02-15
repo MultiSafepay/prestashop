@@ -1,3 +1,18 @@
+## 4.8.0
+Release date: February 15th, 2021
+
+### Added
++ DAVAMS-270: Add CBC payment method
+
+### Fixed
++ Fix undefined index for forwarded IP address
+
+### Changed
++ DAVAMS-346: Update Trustly logo
++ PLGPRSS17-13: Update payment logos for different languages (NL,DE,FR,ES,GB)
+
+***
+
 ## 4.7.1
 Release date: December 7th, 2020
 

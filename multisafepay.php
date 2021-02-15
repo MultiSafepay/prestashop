@@ -33,6 +33,7 @@ if (!defined('_PS_VERSION_')) {
 class Multisafepay extends PaymentModule
 {
     protected $_postErrors = array();
+    protected $default_locale = 'en_GB';
     public $details;
     public $owner;
     public $address;
@@ -41,6 +42,7 @@ class Multisafepay extends PaymentModule
     public $currencies;
     public $carriers;
     public $groups;
+
 
     /*
      * This array contains all supported gifcards and is used to generate the configuration an paymentOptions
@@ -101,6 +103,7 @@ class Multisafepay extends PaymentModule
         array("code" => "dbrtp", "name" => "Request to Pay", 'config' => true),
         array("code" => "applepay", "name" => "Apple Pay", 'config' => true),
         array("code" => "in3", "name" => "in3", 'config' => true),
+        array("code" => "cbc", "name" => "CBC", 'config' => true),
 
     );
 
@@ -108,7 +111,7 @@ class Multisafepay extends PaymentModule
     {
         $this->name = 'multisafepay';
         $this->tab = 'payments_gateways';
-        $this->version = '4.7.1';
+        $this->version = '4.8.0';
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
         $this->author = 'MultiSafepay';
         $this->controllers = array('validation', 'payment');
@@ -814,25 +817,7 @@ class Multisafepay extends PaymentModule
             $this->gateways[$key]['min_amount'] = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MIN_AMOUNT');
             $this->gateways[$key]['max_amount'] = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_MAX_AMOUNT');
             $this->gateways[$key]['desc'] = Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_DESC');
-        }
-
-        $lang_iso = $this->context->language->iso_code;
-        $locale = Language::getLocaleByIso($lang_iso);
-        $real_locale = str_replace('-', '_', $locale);
-
-        $supported_languages = array(
-            'nl_NL',
-            'en_GB',
-            'it_IT',
-            'de_DE',
-            'fr_FR',
-            'es_ES'
-        );
-
-        if (in_array($real_locale, $supported_languages)) {
-            $locale = $real_locale;
-        } else {
-            $locale = "en_GB";
+            $this->gateways[$key]['logo'] = $this->getLogo($gateway['code'], 'gateways');
         }
 
         $template_vars = array(
@@ -846,7 +831,6 @@ class Multisafepay extends PaymentModule
             'max_order_amount' => $this->l('Maximum order amount'),
             'description' => $this->l('Frontend description'),
             'configuration' => $this->l('configuration'),
-            'locale' => $locale,
             'path' => $this->_path,
         );
         $this->context->smarty->assign($template_vars);
@@ -864,25 +848,7 @@ class Multisafepay extends PaymentModule
             $this->giftcards[$key]['title'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_TITLE');
             $this->giftcards[$key]['sort'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_SORT');
             $this->giftcards[$key]['desc'] = Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_DESC');
-        }
-
-        $lang_iso = $this->context->language->iso_code;
-        $locale = Language::getLocaleByIso($lang_iso);
-        $real_locale = str_replace('-', '_', $locale);
-
-        $supported_languages = array(
-            'nl_NL',
-            'en_GB',
-            'it_IT',
-            'de_DE',
-            'fr_FR',
-            'es_ES'
-        );
-
-        if (in_array($real_locale, $supported_languages)) {
-            $locale = $real_locale;
-        } else {
-            $locale = "en_GB";
+            $this->giftcards[$key]['logo'] = $this->getLogo($giftcard['code'], 'giftcards');
         }
 
         $template_vars = array(
@@ -892,7 +858,6 @@ class Multisafepay extends PaymentModule
             'disable' => $this->l('Off'),
             'description' => $this->l('Frontend description'),
             'configuration' => $this->l('configuration'),
-            'locale' => $locale,
             'path' => $this->_path,
         );
         $this->context->smarty->assign($template_vars);
@@ -964,30 +929,12 @@ class Multisafepay extends PaymentModule
                         $title = $gateway['name'];
                     }
 
-                    $lang_iso = Language::getIsoById($this->context->cart->id_lang);
-                    $locale = Language::getLocaleByIso($lang_iso);
-                    $real_locale = str_replace('-', '_', $locale);
-
-                    $supported_languages = array(
-                        'nl_NL',
-                        'en_GB',
-                        'it_IT',
-                        'de_DE',
-                        'fr_FR',
-                        'es_ES'
-                    );
-
-                    if (in_array($real_locale, $supported_languages)) {
-                        $locale = $real_locale;
-                    } else {
-                        $locale = "en_GB";
-                    }
-
+                    $logo = $this->getLogo($gateway['code'], 'gateways');
                     //$newOption = new PaymentOption();
                     $externalOption = new PaymentOption();
                     $externalOption->setCallToActionText($this->l($title));
                     $externalOption->setAction($this->context->link->getModuleLink($this->name, 'payment', array('gateway' => $gateway["code"]), true));
-                    $externalOption->setLogo(_MODULE_DIR_ . 'multisafepay/views/images/gateways/' . $locale . '/' . $gateway["code"] . '.png');
+                    $externalOption->setLogo($logo);
                     $externalOption->setAdditionalInformation(Configuration::get('MULTISAFEPAY_GATEWAY_' . $gateway["code"] . '_DESC'));
 
                     switch ($gateway['code']) {
@@ -1034,25 +981,6 @@ class Multisafepay extends PaymentModule
             if (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard['code']) == 1) {
                 $active = false;
 
-                $lang_iso = Language::getIsoById($this->context->cart->id_lang);
-                $locale = Language::getLocaleByIso($lang_iso);
-                $real_locale = str_replace('-', '_', $locale);
-
-                $supported_languages = array(
-                    'nl_NL',
-                    'en_GB',
-                    'it_IT',
-                    'de_DE',
-                    'fr_FR',
-                    'es_ES'
-                );
-
-                if (in_array($real_locale, $supported_languages)) {
-                    $locale = $real_locale;
-                } else {
-                    $locale = "en_GB";
-                }
-
                 $activeGroup = false;
                 foreach ($groups as $group) {
                     if (Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_GROUP_' . $group) == 'on') {
@@ -1070,10 +998,12 @@ class Multisafepay extends PaymentModule
                 }
 
                 if ($active) {
+                    $logo = $this->getLogo($giftcard['code'], 'giftcards');
+
                     $newOption = new PaymentOption();
                     $externalOption = new PaymentOption();
                     $externalOption->setCallToActionText($this->l($giftcard['name']))->setAction($this->context->link->getModuleLink($this->name, 'payment', array('gateway' => $giftcard["code"]), true));
-                    $externalOption->setLogo(_MODULE_DIR_ . 'multisafepay/views/images/giftcards/' . $locale . '/' . $giftcard["code"] . '.png');
+                    $externalOption->setLogo($logo);
                     $externalOption->setAdditionalInformation(Configuration::get('MULTISAFEPAY_GIFTCARD_' . $giftcard["code"] . '_DESC'));
                     $externalOption->setForm($this->getDefault($giftcard['code']));
                     $payment_options[] = $externalOption;
@@ -1142,6 +1072,40 @@ class Multisafepay extends PaymentModule
             }
         }
         return $paymentMethods;
+    }
+
+    /**
+     * @param $code
+     * @param $type
+     * @return string
+     */
+    private function getLogo($code, $type)
+    {
+        $logo = $this->getUrlLogo($code, $type, $this->getLocale());
+        if (!file_exists(_PS_ROOT_DIR_ . $logo)) {
+            $logo = $this->getUrlLogo($code, $type, $this->default_locale);
+        }
+        return $logo;
+    }
+
+    /**
+     * @param $code
+     * @param $type
+     * @param $locale
+     * @return string
+     */
+    private function getUrlLogo($code, $type, $locale)
+    {
+        $logo = _MODULE_DIR_ . 'multisafepay/views/images/' . $type . '/' . $locale . '/' . $code . '.png';
+        return $logo;
+    }
+
+    /**
+     * @return string|string[]
+     */
+    private function getLocale()
+    {
+        return str_replace('-', '_', $this->context->language->locale);
     }
 
     protected function getDefault($payment)

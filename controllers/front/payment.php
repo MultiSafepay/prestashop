@@ -54,9 +54,11 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
         $locale = Language::getLocaleByIso($lang_iso);
         $real_locale = str_replace('-', '_', $locale);
 
-        $ip_address = $this->validateIP($_SERVER['REMOTE_ADDR']);
-        $forwarded_ip = $this->validateIP($_SERVER['HTTP_X_FORWARDED_FOR']);
+        $ip_address = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null;
+        $ip_address = $this->validateIP($ip_address);
 
+        $forwarded_ip = isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : null;
+        $forwarded_ip = $this->validateIP($forwarded_ip);
 
         list($items, $shopping_cart, $checkout_options) = $this->getShoppingCart();
         list($street_billing, $house_number_billing) = $this->parseAddress($billing->address1, $billing->address2);
@@ -120,7 +122,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
             "plugin" => array(
                 "shop" => 'Prestashop',
                 "shop_version" => _PS_VERSION_,
-                "plugin_version" => ' - Plugin 4.7.1',
+                "plugin_version" => ' - Plugin 4.8.0',
                 "partner" => "MultiSafepay",
             )
         );
@@ -365,6 +367,7 @@ class MultiSafepayPaymentModuleFrontController extends ModuleFrontController
                 break;
             case 'banktrans':
             case 'ing':
+            case 'cbc':
             case 'kbc':
             case 'paypal':
             case 'santander':
