@@ -2,7 +2,10 @@
   <img src="https://www.multisafepay.com/img/multisafepaylogo.svg" width="400px" position="center">
 </p>
 
-# MultiSafepay plugin for PrestaShop 1.7
+# MultiSafepay plugin for PrestaShop 1.7 (Deprecated)
+
+:warning: This plugin is marked as deprecated and will not receive any significant new features in the future. 
+It has been replaced by our [New PrestaShop 1.7 plugin](https://github.com/MultiSafepay/prestashop-official/). 
 
 Easily integrate MultiSafepay payment solutions into your PrestaShop 1.7 webshop with the free and completely new MultiSafepay PrestaShop 1.7 plugin.
 
